@@ -1,65 +1,64 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
+import { NgForm, UntypedFormGroup, UntypedFormControl, Validators } from '@angular/forms';
+import { Router, ActivatedRoute } from "@angular/router";
 import { AuthService } from 'app/shared/auth/auth.service';
-import { Router } from '@angular/router';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { StorageService } from 'app/shared/auth/storage.service';
+import { NgxSpinnerService } from "ngx-spinner";
+
 
 @Component({
   selector: 'app-login-page',
   templateUrl: './login-page.component.html',
   styleUrls: ['./login-page.component.scss']
 })
+
 export class LoginPageComponent {
 
-  loginForm: FormGroup;
   loginFormSubmitted = false;
   isLoginFailed = false;
 
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private router: Router
-  ) {}
+  loginForm = new UntypedFormGroup({
+    username: new UntypedFormControl('guest@apex.com', [Validators.required]),
+    password: new UntypedFormControl('Password', [Validators.required]),
+    rememberMe: new UntypedFormControl(true)
+  });
 
-  ngOnInit() {
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required]],
-      rememberMe: [false]
-    });
+
+  constructor(private router: Router, private authService: AuthService,
+    private spinner: NgxSpinnerService,
+    private route: ActivatedRoute) {
   }
 
   get lf() {
     return this.loginForm.controls;
   }
 
+  // On submit button click
   onSubmit() {
     this.loginFormSubmitted = true;
     if (this.loginForm.invalid) {
       return;
     }
 
-    const signinRequest = {
-      email: this.loginForm.get('email')!.value,
-      password: this.loginForm.get('password')!.value
-    };
+    this.spinner.show(undefined,
+      {
+        type: 'ball-triangle-path',
+        size: 'medium',
+        bdColor: 'rgba(0, 0, 0, 0.8)',
+        color: '#fff',
+        fullScreen: true
+      });
 
-    this.authService.login(signinRequest).subscribe(
-      (response) => {
-        console.log('Login successful!');
-        this.isLoginFailed = false;
-
-        // Check role and redirect accordingly
-        if (StorageService.isAdminLoggedIn()) {
-          this.router.navigateByUrl('/dashboard/dashboard1');
-        } else {
-          this.router.navigateByUrl('/dashboard/dashboard2');
-        }
-      },
-      (error) => {
-        console.error('Login failed:', error);
+    this.authService.signinUser(this.loginForm.value.username, this.loginForm.value.password)
+      .then((res) => {
+        this.spinner.hide();
+        this.router.navigate(['/dashboard/dashboard1']);
+      })
+      .catch((err) => {
         this.isLoginFailed = true;
+        this.spinner.hide();
+        console.log('error: ' + err)
       }
-    );
+      );
   }
+
 }
