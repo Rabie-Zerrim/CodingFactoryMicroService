@@ -1,5 +1,6 @@
 package tn.esprit.esponline.Controller;
 
+import com.google.zxing.WriterException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -7,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,11 +16,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.esponline.DAO.entities.CategoryEnum;
 import tn.esprit.esponline.DAO.entities.Course;
-import tn.esprit.esponline.DAO.entities.User;
 import tn.esprit.esponline.Services.ICourseService;
 import tn.esprit.esponline.Services.IFileStorageService;
+import tn.esprit.esponline.Services.QRCodeService;
 
 import java.io.IOException;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,8 +34,12 @@ public class CourseRestController {
     @Autowired
     private ICourseService courseService;
 
+
     @Autowired
     private IFileStorageService fileStorageService;
+
+    @Autowired
+    private QRCodeService qrCodeService;
 
     @Operation(summary = "Retrieve all courses", description = "This endpoint retrieves all courses from the database.")
     @ApiResponses(value = {
@@ -48,32 +56,107 @@ public class CourseRestController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved course"),
             @ApiResponse(responseCode = "404", description = "Course not found")
     })
-    @GetMapping("/{courseId}/trainer-name")
-    public ResponseEntity<String> getTrainerName(@PathVariable Long courseId) {
-        Course course = courseService.findById(courseId);
-        if (course != null && course.getTrainer() != null) {
-            String trainerName = course.getTrainer().getName(); // Assuming trainer is a User object
-            return ResponseEntity.ok(trainerName);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainer not found");
+
+
+
+    @PostMapping
+    public ResponseEntity<Course> addCourse(@Valid @RequestBody Course course) throws IOException, WriterException {
+        Course savedCourse = courseService.addCourse(course);
+
+
+            // Generate and store QR code
+            String qrText = String.format("Course: %s\nID: %d", savedCourse.getTitle(), savedCourse.getId());
+            byte[] qrCode = qrCodeService.generateQRCodeImage(qrText, 250, 250);
+            String qrCodeUrl = fileStorageService.uploadQRCode(qrCode, "qr-code-" + savedCourse.getId() + ".png");
+
+            // Update course with QR code URL
+            savedCourse.setQrCodeUrl(qrCodeUrl);
+            courseService.updateCourse(savedCourse, savedCourse.getId());
+
+
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedCourse);
+    }
+    @GetMapping("/{id}/qr-code-base64")
+    public ResponseEntity<Map<String, String>> getCourseQRCodeBase64(@PathVariable int id) {
+        try {
+            Course course = courseService.getCourseById(id);
+            if (course == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            String qrText = String.format("Course: %s\nTrainer: %s\nCategory: %s",
+                    course.getTitle(), course.getTrainerName(), course.getCategoryCourse());
+
+            byte[] qrCode = qrCodeService.generateQRCodeImage(qrText, 250, 250);
+            String base64Image = Base64.getEncoder().encodeToString(qrCode);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("qrCodeBase64", "data:image/png;base64," + base64Image);
+            response.put("downloadUrl", "/courses/" + id + "/qr-code");
+
+            return ResponseEntity.ok(response);
+        } catch (WriterException | IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    @Operation(summary = "Generate QR code for course",
+            description = "Generates a QR code containing course details")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "QR code generated successfully"),
+            @ApiResponse(responseCode = "404", description = "Course not found")
+    })
+    @GetMapping("/{id}/qr-code")
+    public ResponseEntity<byte[]> getCourseQRCode(@PathVariable int id) {
+        try {
+            Course course = courseService.getCourseById(id);
+            if (course == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Create text for QR code
+            String qrText = String.format("Course: %s\nTrainer: %s\nCategory: %s",
+                    course.getTitle(), course.getTrainerName(), course.getCategoryCourse());
+
+            byte[] qrCode = qrCodeService.generateQRCodeImage(qrText, 250, 250);
+
+            // Set proper headers for download
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"course-" + id + "-qrcode.png\"")
+                    .body(qrCode);
+
+        } catch (WriterException | IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @GetMapping("/{id}")
-    public Course getCourseById(@PathVariable int id) {
-        return courseService.getCourseById(id);
-    }
-
-    @Operation(summary = "Add a new course", description = "This endpoint adds a new course to the database.")
+    @Operation(summary = "Generate QR code with course URL",
+            description = "Generates a QR code containing a URL to access the course")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Successfully added course"),
-            @ApiResponse(responseCode = "400", description = "Invalid course data")
+            @ApiResponse(responseCode = "200", description = "QR code generated successfully"),
+            @ApiResponse(responseCode = "404", description = "Course not found")
     })
-    @PostMapping
-    public Course addCourse(@Valid @RequestBody Course course) {
-        return courseService.addCourse(course);
-    }
+    @GetMapping(value = "/{id}/qr-code-url", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getCourseQRCodeWithUrl(
+            @PathVariable int id,
+            @RequestParam String baseUrl) {
 
+        try {
+            Course course = courseService.getCourseById(id);
+            if (course == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            String courseUrl = baseUrl + "/courses/" + id;
+            byte[] qrCode = qrCodeService.generateQRCodeImage(courseUrl, 250, 250);
+            return ResponseEntity.ok().body(qrCode);
+
+        } catch (WriterException | IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
     @Operation(summary = "Update an existing course", description = "This endpoint updates a course by its ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully updated course"),
@@ -102,36 +185,10 @@ public class CourseRestController {
         courseService.deleteCourse(id);
     }
 
-    @Operation(summary = "Enroll a student in a course", description = "This endpoint enrolls a student in a specific course.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully enrolled student in course"),
-            @ApiResponse(responseCode = "404", description = "Course or student not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid data")
-    })
-    @PostMapping("/{courseId}/enroll/{studentId}")
-    public Course enrollStudentInCourse(@PathVariable int courseId, @PathVariable int studentId) {
-        return courseService.enrollStudentInCourse(courseId, studentId);
-    }
 
-    @Operation(summary = "Get all students", description = "This endpoint retrieves all students.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved all students"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
-    @GetMapping("/students")
-    public List<User> getAllStudents() {
-        return courseService.getAllStudents();
-    }
 
-    @Operation(summary = "Get enrolled students for a course", description = "This endpoint retrieves the list of students enrolled in a specific course.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved enrolled students"),
-            @ApiResponse(responseCode = "404", description = "Course not found")
-    })
-    @GetMapping("/{courseId}/students")
-    public List<User> getEnrolledStudents(@PathVariable int courseId) {
-        return courseService.getEnrolledStudents(courseId);
-    }
+
+
     @GetMapping("/search")
     public ResponseEntity<Page<Course>> searchCourses(
             @RequestParam(required = false) String searchQuery,
@@ -144,7 +201,19 @@ public class CourseRestController {
     }
 
     ///hedhi mta3 node js
+    @GetMapping("/{id}")
+    public ResponseEntity<Map<String, Object>> getCourseById(@PathVariable int id) {
+        Course course = courseService.getCourseById(id);
+        if (course == null) {
+            return ResponseEntity.notFound().build();
+        }
 
+        Map<String, Object> response = new HashMap<>();
+        response.put("course", course);
+        response.put("qrCodeUrl", course.getQrCodeUrl());
+
+        return ResponseEntity.ok(response);
+    }
     @PutMapping("/{id}/update-rate")
     public ResponseEntity<Void> updateCourseRate(
             @PathVariable int id,

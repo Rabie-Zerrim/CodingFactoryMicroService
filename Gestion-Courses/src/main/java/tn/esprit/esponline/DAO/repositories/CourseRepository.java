@@ -8,6 +8,8 @@ import org.springframework.data.repository.query.Param;
 import tn.esprit.esponline.DAO.entities.CategoryEnum;
 import tn.esprit.esponline.DAO.entities.Course;
 
+import java.util.List;
+
 public interface CourseRepository extends JpaRepository<Course, Integer> {
     @Query("SELECT c FROM Course c WHERE " +
             "(:searchQuery IS NULL OR LOWER(c.title) LIKE LOWER(CONCAT('%', :searchQuery, '%'))) AND " +
@@ -18,4 +20,7 @@ public interface CourseRepository extends JpaRepository<Course, Integer> {
             Pageable pageable
     );
     Course findById(Long courseId);
+
+    Page<Course> findByTitleContainingIgnoreCaseAndCategoryCourse(String searchQuery, CategoryEnum category, Pageable pageable);
+    List<Course> findByTrainerId(Long trainerId);
 }
