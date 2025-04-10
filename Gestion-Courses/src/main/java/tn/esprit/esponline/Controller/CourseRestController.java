@@ -64,14 +64,14 @@ public class CourseRestController {
         Course savedCourse = courseService.addCourse(course);
 
 
-            // Generate and store QR code
-            String qrText = String.format("Course: %s\nID: %d", savedCourse.getTitle(), savedCourse.getId());
-            byte[] qrCode = qrCodeService.generateQRCodeImage(qrText, 250, 250);
-            String qrCodeUrl = fileStorageService.uploadQRCode(qrCode, "qr-code-" + savedCourse.getId() + ".png");
+        // Generate and store QR code
+        String qrText = String.format("Course: %s\nID: %d", savedCourse.getTitle(), savedCourse.getId());
+        byte[] qrCode = qrCodeService.generateQRCodeImage(qrText, 250, 250);
+        String qrCodeUrl = fileStorageService.uploadQRCode(qrCode, "qr-code-" + savedCourse.getId() + ".png");
 
-            // Update course with QR code URL
-            savedCourse.setQrCodeUrl(qrCodeUrl);
-            courseService.updateCourse(savedCourse, savedCourse.getId());
+        // Update course with QR code URL
+        savedCourse.setQrCodeUrl(qrCodeUrl);
+        courseService.updateCourse(savedCourse, savedCourse.getId());
 
 
 
@@ -200,7 +200,7 @@ public class CourseRestController {
         return ResponseEntity.ok(courses);
     }
 
-    ///hedhi mta3 node js
+    // In your Spring controller
     @GetMapping("/{id}")
     public ResponseEntity<Map<String, Object>> getCourseById(@PathVariable int id) {
         Course course = courseService.getCourseById(id);

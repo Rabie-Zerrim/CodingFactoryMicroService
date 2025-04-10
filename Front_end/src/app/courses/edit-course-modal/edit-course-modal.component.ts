@@ -3,6 +3,7 @@ import { CourseService } from '../../services/course.service';
 import { Course } from '../../models/courses';
 import { HttpClient } from '@angular/common/http';
 import Swal from 'sweetalert2';
+import { CategoryEnum } from '../../models/CategoryEnum';
 
 @Component({
   selector: 'app-edit-course-modal',
@@ -15,7 +16,9 @@ export class EditCourseModalComponent implements OnInit {
   @Output() showModalChange = new EventEmitter<boolean>();
   @Output() courseUpdated = new EventEmitter<Course>();
 
-  categoryEnum = ["WEB_DEVELOPMENT", "DATA_SCIENCE", "SECURITY", "AI", "CLOUD"];
+  // Keep both string array and enum for flexibility
+  categoryEnumStrings = ["WEB_DEVELOPMENT", "DATA_SCIENCE", "SECURITY", "AI", "CLOUD"];
+  categoryEnum = CategoryEnum;
   course: Course = new Course();
   imageUploading: boolean = false;
   imageUploaded: boolean = false;
@@ -40,24 +43,47 @@ export class EditCourseModalComponent implements OnInit {
   }
 
   ngOnChanges(): void {
-    if (this.courseId) {
+    if (this.courseId && this.showModal) {  // Only load when modal is shown
       this.loadCourseData();
     }
   }
 
+
   loadCourseData(): void {
+    console.log('Loading course data for ID:', this.courseId);
     this.courseService.getCourseById(this.courseId).subscribe(
-      (data) => {
-        this.course = data;
+      (response: any) => { // Temporarily use 'any' to bypass type checking
+        console.log('Full API response:', response);
+
+        // Handle both nested and direct course responses
+        const apiCourse = response.course ? response.course : response;
+        console.log('Extracted course data:', apiCourse);
+
+        // Create a new Course object with all properties
+        this.course = {
+          id: apiCourse.id,
+          title: apiCourse.title,
+          description: apiCourse.description,
+          level: apiCourse.level,
+          rate: apiCourse.rate || 0,
+          image: apiCourse.image,
+          categoryCourse: apiCourse.categoryCourse,
+          qrCodeUrl: apiCourse.qrCodeUrl,
+          trainerId: apiCourse.trainerId,
+          trainerName: apiCourse.trainerName,
+          resources: apiCourse.resources || []
+        };
+
+        console.log('Assigned course object:', this.course);
         this.imageUploaded = !!this.course.image;
         this.cdr.detectChanges();
       },
       (error) => {
         console.error('Error fetching course:', error);
+        Swal.fire('Error', 'Failed to load course data', 'error');
       }
     );
   }
-
   closeModal(): void {
     this.showModal = false;
     this.showModalChange.emit(this.showModal);
@@ -70,8 +96,8 @@ export class EditCourseModalComponent implements OnInit {
     if (!this.course.title) {
       this.titleError = 'Title is required.';
       isValid = false;
-    } else if (this.course.title.length > 20) {
-      this.titleError = 'Title must be less than 20 characters.';
+    } else if (this.course.title.length > 100) {  // Changed to match backend (100 chars)
+      this.titleError = 'Title must be less than 100 characters.';
       isValid = false;
     } else {
       this.titleError = null;
@@ -81,8 +107,8 @@ export class EditCourseModalComponent implements OnInit {
     if (!this.course.description) {
       this.descriptionError = 'Description is required.';
       isValid = false;
-    } else if (this.course.description.length > 100) {
-      this.descriptionError = 'Description must be less than 100 characters.';
+    } else if (this.course.description.length > 500) {  // Changed to match backend (500 chars)
+      this.descriptionError = 'Description must be less than 500 characters.';
       isValid = false;
     } else {
       this.descriptionError = null;
@@ -100,11 +126,32 @@ export class EditCourseModalComponent implements OnInit {
     if (!this.course.level) {
       this.levelError = 'Level is required.';
       isValid = false;
+    } else if (this.course.level.length > 20) {  // Changed to match backend (20 chars)
+      this.levelError = 'Level must be less than 20 characters.';
+      isValid = false;
     } else {
       this.levelError = null;
     }
 
+    // Validate Image
+    if (!this.course.image) {
+      this.imageError = 'Image is required.';
+      isValid = false;
+    } else {
+      this.imageError = null;
+    }
+
     return isValid;
+  }
+  private prepareCourseForUpdate(): Course {
+    const courseToUpdate = { ...this.course };
+
+    // Convert category string back to enum for backend
+    if (typeof courseToUpdate.categoryCourse === 'string') {
+      courseToUpdate.categoryCourse = CategoryEnum[courseToUpdate.categoryCourse as keyof typeof CategoryEnum];
+    }
+
+    return courseToUpdate;
   }
 
   updateCourse(): void {
@@ -112,45 +159,31 @@ export class EditCourseModalComponent implements OnInit {
       return;
     }
 
-    this.courseService.updateCourse(this.courseId, this.course).subscribe(
+    const courseToUpdate = this.prepareCourseForUpdate();
+
+    this.courseService.updateCourse(this.courseId, courseToUpdate).subscribe(
       (updatedCourse) => {
         this.courseUpdated.emit(updatedCourse);
         this.closeModal();
-        Swal.fire({
-          title: 'Success!',
-          text: 'Course updated successfully!',
-          icon: 'success',
-          confirmButtonText: 'OK'
-        });
+        Swal.fire('Success!', 'Course updated successfully!', 'success');
       },
       (error) => {
         console.error('Error updating course:', error);
         if (error.error) {
           const errorMessages = Object.values(error.error).join('\n');
-          Swal.fire({
-            title: 'Validation Error',
-            text: errorMessages,
-            icon: 'error',
-            confirmButtonText: 'OK'
-          });
+          Swal.fire('Validation Error', errorMessages, 'error');
         } else {
-          Swal.fire({
-            title: 'Error',
-            text: 'Something went wrong while updating the course.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-          });
+          Swal.fire('Error', 'Failed to update course', 'error');
         }
       }
     );
   }
-
   async onImageSelected(event: Event): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
 
     this.imageUploading = true;
-    
+
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -176,5 +209,20 @@ export class EditCourseModalComponent implements OnInit {
       this.imageUploading = false;
       this.cdr.detectChanges();
     }
+  }
+
+  // Helper to display category name properly
+  categories = Object.keys(CategoryEnum)
+    .filter(key => isNaN(Number(key))) // Filter out numeric keys
+    .map(key => ({
+      value: CategoryEnum[key as keyof typeof CategoryEnum],
+      display: this.getCategoryDisplayName(key)
+    }));
+  // Update the getCategoryDisplayName method
+  getCategoryDisplayName(category: string): string {
+    if (!category) return '';
+    return category.split('_').map(word =>
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ');
   }
 }

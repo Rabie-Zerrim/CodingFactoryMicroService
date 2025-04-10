@@ -1,7 +1,7 @@
 <div class="course-container">
   <!-- Search Input and Filters -->
   <div class="search-container">
-    <input type="text" [(ngModel)]="searchQuery" placeholder="Search by name or category..." 
+    <input type="text" [(ngModel)]="searchQuery" placeholder="Search by name or category..."
            class="search-input" (ngModelChange)="onSearchChange()">
     <select [(ngModel)]="selectedCategory" class="category-dropdown" (ngModelChange)="onSearchChange()">
       <option value="">All Categories</option>
@@ -43,10 +43,7 @@
     <div class="course-cards-container">
       <div *ngFor="let course of page.content; let i = index" class="course-card">
         <div class="card">
-          <div class="card-header">
-            <h4 class="card-title">{{ course.title }}</h4>
-            <p><strong>Created by:</strong> {{ course.trainer?.name }}</p>
-          </div>
+
           <div class="card-content">
             <a [href]="course.link" target="_blank">
               <img *ngIf="course.image" [src]="getFile(course.image)" alt="Course Image" class="course-image">
@@ -82,12 +79,8 @@
             <button (click)="openEditModal(course)" class="btn-warning round">
               <span class="icon">✏️</span> Edit
             </button>
-            <button (click)="openStudentsModal(course)" class="btn-info round">
-              <span class="icon">👥</span> View Students
-            </button>
-            <button (click)="openEnrollModal(course)" class="btn-success round">
-              <span class="icon">👥</span> Enroll Students
-            </button>
+
+
             <button (click)="openAIImprovementsModal(course)" class="btn-ai-improvements round">
               <span class="icon">🤖</span> AI Improvements
             </button>
@@ -121,19 +114,9 @@
   </app-show-course-resource>
 
   <!-- Enroll Students Modal -->
-  <app-enroll-students-modal
-    [showModal]="showEnrollModal"
-    [selectedCourse]="selectedCourse"
-    (showModalChange)="showEnrollModal = $event"
-    (studentsEnrolled)="onStudentsEnrolled()">
-  </app-enroll-students-modal>
+
 
   <!-- View Students Modal -->
-  <app-show-students-modal
-    [showModal]="showStudentsModal"
-    [students]="enrolledStudents"
-    (showModalChange)="showStudentsModal = $event">
-  </app-show-students-modal>
 
   <!-- Add Review Modal -->
   <app-review-modal
