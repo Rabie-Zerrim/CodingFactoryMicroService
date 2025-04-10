@@ -43,7 +43,9 @@
     <div class="course-cards-container">
       <div *ngFor="let course of page.content; let i = index" class="course-card">
         <div class="card">
-
+          <div class="card-header">
+            <h4 class="card-title">{{ course.title }}</h4>
+          </div>
           <div class="card-content">
             <a [href]="course.link" target="_blank">
               <img *ngIf="course.image" [src]="getFile(course.image)" alt="Course Image" class="course-image">
@@ -79,7 +81,9 @@
             <button (click)="openEditModal(course)" class="btn-warning round">
               <span class="icon">✏️</span> Edit
             </button>
-
+            <button (click)="openQRModal(course)" class="btn-info round">
+              <span class="icon">🔳</span> QR Code
+            </button>
 
             <button (click)="openAIImprovementsModal(course)" class="btn-ai-improvements round">
               <span class="icon">🤖</span> AI Improvements
@@ -135,4 +139,26 @@
 
   <!-- Floating Plus Button -->
   <button class="floating-plus" (click)="openAddCourseModal()">+</button>
+</div>
+
+<<!-- QR Code Modal -->
+<div class="modal" [ngClass]="{'show': showQRModal}" *ngIf="showQRModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>QR Code for {{selectedCourse?.title}}</h3>
+      <button class="close-btn" (click)="closeQRModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="qr-code-container">
+        <img *ngIf="qrCodeImageUrl" [src]="qrCodeImageUrl" alt="Course QR Code" class="qr-code-image">
+        <div *ngIf="!qrCodeImageUrl" class="loading">Generating QR Code...</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" (click)="closeQRModal()">Close</button>
+      <a *ngIf="qrCodeImageUrl" [href]="qrCodeImageUrl" download="course-{{selectedCourse?.id}}-qrcode.png" class="btn btn-secondary">
+        Download QR Code
+      </a>
+    </div>
+  </div>
 </div>

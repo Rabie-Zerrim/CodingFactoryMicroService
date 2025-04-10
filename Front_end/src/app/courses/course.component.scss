@@ -4,7 +4,36 @@
   padding: 0;
   box-sizing: border-box;
 }
+.qr-code-container {
+  text-align: center;
+}
 
+.qr-code-image {
+  max-width: 100%;
+  height: auto;
+  max-height: 300px;
+  display: block;
+  margin: 0 auto;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+}
+
+.modal-footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
 body {
   font-family: 'Arial', sans-serif;
   background-color: #f7f7f7;

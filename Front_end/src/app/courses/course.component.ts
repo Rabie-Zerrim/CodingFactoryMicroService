@@ -26,6 +26,10 @@ export class CourseComponent implements OnInit {
   };
   selectedCourse: Course | null = null;
   trainers: User[] = [];
+  // Add this to your CourseComponent class
+  showQRModal = false;
+  qrCodeImageUrl: string | null = null;
+
   showModal = false;
   showAddResourceModal = false;
   showResourcesModal = false;
@@ -40,8 +44,8 @@ export class CourseComponent implements OnInit {
   loading = false;
 
   constructor(
-    private courseService: CourseService, 
-    private courseResourceService: CourseResourceService, 
+    private courseService: CourseService,
+    private courseResourceService: CourseResourceService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -87,10 +91,44 @@ export class CourseComponent implements OnInit {
       (error) => {
         console.error('Error searching courses:', error);
         this.loading = false;
+        // Fallback to empty page
+        this.page = {
+          content: [],
+          totalElements: 0,
+          totalPages: 0,
+          size: this.page.size,
+          number: this.page.number,
+          numberOfElements: 0
+        };
       }
     );
   }
+  openQRModal(course: Course): void {
+    this.selectedCourse = course;
+    if (course.qrCodeUrl) {
+      // If QR code URL exists, use it directly
+      this.qrCodeImageUrl = course.qrCodeUrl;
+      this.showQRModal = true;
+    } else {
+      // If no QR code exists, generate one
+      this.courseService.getCourseQRCodeBase64(course.id).subscribe(
+        (response) => {
+          this.qrCodeImageUrl = response.qrCodeBase64;
+          this.showQRModal = true;
+          this.cdr.detectChanges();
+        },
+        (error) => {
+          console.error('Error generating QR code:', error);
+          Swal.fire('Error', 'Failed to generate QR code', 'error');
+        }
+      );
+    }
+  }
 
+  closeQRModal(): void {
+    this.showQRModal = false;
+    this.qrCodeImageUrl = null;
+  }
   onSearchChange(): void {
     this.page.number = 0; // Reset to first page when search/filter changes
     this.searchCourses();

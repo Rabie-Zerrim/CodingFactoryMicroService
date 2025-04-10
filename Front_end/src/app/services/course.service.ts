@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import {Observable, of, throwError} from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Course } from '../models/courses';
 import { User } from '../models/User';
@@ -71,7 +71,16 @@ export class CourseService {
       })
     );
   }
-
+  getCourseQRCodeBase64(id: number): Observable<{ qrCodeBase64: string, downloadUrl: string }> {
+    return this.http.get<{ qrCodeBase64: string, downloadUrl: string }>(
+      `${this.apiUrl}/${id}/qr-code-base64`
+    ).pipe(
+      catchError(error => {
+        console.error('Error fetching QR code:', error);
+        return throwError(() => new Error('Failed to fetch QR code'));
+      })
+    );
+  }
   getAllStudents(): Observable<User[]> {
     return this.http.get<User[]>(`${this.apiUrl}/students`).pipe(
       catchError(error => {
@@ -118,7 +127,15 @@ export class CourseService {
     return this.http.get<Page<Course>>(`${this.apiUrl}/search`, { params }).pipe(
       catchError(error => {
         console.error('Error searching courses:', error);
-        return throwError(() => new Error('Failed to search courses'));
+        // Return empty page instead of throwing error
+        return of({
+          content: [],
+          totalElements: 0,
+          totalPages: 0,
+          size: size,
+          number: page,
+          numberOfElements: 0
+        });
       })
     );
   }

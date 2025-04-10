@@ -64,11 +64,12 @@ public class CourseRestController {
         Course savedCourse = courseService.addCourse(course);
 
 
-        // Generate and store QR code
-        String qrText = String.format("Course: %s\nID: %d", savedCourse.getTitle(), savedCourse.getId());
+        // Updated to only include name and description
+        String qrText = String.format("Course: %s\nDescription: %s",
+                savedCourse.getTitle(), savedCourse.getDescription());
+
         byte[] qrCode = qrCodeService.generateQRCodeImage(qrText, 250, 250);
         String qrCodeUrl = fileStorageService.uploadQRCode(qrCode, "qr-code-" + savedCourse.getId() + ".png");
-
         // Update course with QR code URL
         savedCourse.setQrCodeUrl(qrCodeUrl);
         courseService.updateCourse(savedCourse, savedCourse.getId());
@@ -85,8 +86,9 @@ public class CourseRestController {
                 return ResponseEntity.notFound().build();
             }
 
-            String qrText = String.format("Course: %s\nTrainer: %s\nCategory: %s",
-                    course.getTitle(), course.getTrainerName(), course.getCategoryCourse());
+            // Updated to only include name and description
+            String qrText = String.format("Course: %s\nDescription: %s",
+                    course.getTitle(), course.getDescription());
 
             byte[] qrCode = qrCodeService.generateQRCodeImage(qrText, 250, 250);
             String base64Image = Base64.getEncoder().encodeToString(qrCode);
@@ -100,6 +102,7 @@ public class CourseRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
     @Operation(summary = "Generate QR code for course",
             description = "Generates a QR code containing course details")
     @ApiResponses(value = {
@@ -114,24 +117,21 @@ public class CourseRestController {
                 return ResponseEntity.notFound().build();
             }
 
-            // Create text for QR code
-            String qrText = String.format("Course: %s\nTrainer: %s\nCategory: %s",
-                    course.getTitle(), course.getTrainerName(), course.getCategoryCourse());
+            // Updated to only include name and description
+            String qrText = String.format("Course: %s\nDescription: %s",
+                    course.getTitle(), course.getDescription());
 
             byte[] qrCode = qrCodeService.generateQRCodeImage(qrText, 250, 250);
 
-            // Set proper headers for download
             return ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_PNG)
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "attachment; filename=\"course-" + id + "-qrcode.png\"")
                     .body(qrCode);
-
         } catch (WriterException | IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
     @Operation(summary = "Generate QR code with course URL",
             description = "Generates a QR code containing a URL to access the course")
     @ApiResponses(value = {
