@@ -22,6 +22,8 @@ public class ApiGatewayApplication {
                         .uri("lb://Partnership-Management"))
                 .route("Partnership-Management", r -> r.path("/entreprise/**")
                         .uri("lb://Partnership-Management"))
+                .route("gestion-events", r -> r.path("/event/**")
+                        .uri("lb://EVENT"))
                 .build();
     }
 
