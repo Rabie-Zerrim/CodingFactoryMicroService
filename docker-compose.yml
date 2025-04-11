@@ -1,0 +1,65 @@
+version: '3.0'
+
+services:
+  eureka:
+    build: ./Eureka
+    image: "mayyara/eureka:1.0"
+    container_name: eureka
+    ports:
+      - 8761:8761
+    hostname: eureka
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka
+
+   
+  apigateway:
+    build: ./ApiGateway
+    image: "mayyara/apigateway:1.0"
+    container_name: apigateway
+    ports:
+      - 8085:8085
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:8761/eureka
+    depends_on:
+      - eureka
+      - PartnershipManagement
+
+ # PartnershipManagement:
+  #  build: ./Partnership Management
+   # image: m/Partnership:1.0
+   # container_name: PartnershipManagement
+   # ports:
+    #  - 8082:8082
+    #environment:
+     # - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://localhost:8761/eureka
+    #depends_on:
+     # - eureka
+
+  PartnershipManagement:
+    build: ./Partnership Management
+    image: "mayyara/partnership:2.0"
+    container_name: job
+    ports:
+      - 8082:8082
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db_mysql:3306/MicroServiceProjetDB?createDatabaseIfNotExist=true
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+    depends_on:
+      - eureka
+      - db_mysql
+    
+
+  db_mysql:
+    image: "mysql:5.7"
+    container_name: db_mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=jobTest
+    restart: unless-stopped
+    #command: --default-authentication-plugin=mysql_native_password --innodb-force-recovery=1
+    #volumes:
+      #- C:/xampp/mysql/data:/var/lib/mysql  # Persistance avec la base locale
