@@ -52,7 +52,7 @@ This project is a **Partnership Management System** developed as part of the cou
 - H2 (Testing)  
 - JPA (Hibernate)  
 
-### **Cloud & AI**  
+### **AI**  
 - **Scraping** (Potential Partnership Suggestions)  
 
 ### **Microservices**  
