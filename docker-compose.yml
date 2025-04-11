@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-auth
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: amiralaabidi7@gmail.com
+      MYSQL_DATABASE: DbAuth
+    ports:
+      - "3307:3306"  # Changed port 3306 to 3307
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - auth-network
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auth-service
+    depends_on:
+      - mysql
+    ports:
+      - "8881:8880"  # Changed port 8880 to 8881
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/DbAuth?createDatabaseIfNotExist=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: amiralaabidi7@gmail.com
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://host.docker.internal:8761/eureka/
+    networks:
+      - auth-network
+
+networks:
+  auth-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
