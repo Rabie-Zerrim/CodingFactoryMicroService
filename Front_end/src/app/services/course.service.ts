@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import {Observable, of, throwError} from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import {catchError, map, tap} from 'rxjs/operators';
 import { Course } from '../models/courses';
 import { User } from '../models/User';
 import { Page } from '../models/page';
+import {StorageService} from '../shared/auth/storage.service';
 
 interface ApiCourseResponse {
   course: Course;
@@ -16,27 +17,43 @@ interface ApiCourseResponse {
 })
 export class CourseService {
   private apiUrl = 'http://localhost:8090/courses';
+  private authApiUrl = 'http://localhost:8090/api/v1/auth';
 
   constructor(private http: HttpClient) {}
 
-  getAllCourses(): Observable<Course[]> {
-    return this.http.get<Course[]>(this.apiUrl).pipe(
-      catchError(error => {
-        console.error('Error fetching courses:', error);
-        return throwError(() => new Error('Failed to fetch courses'));
-      })
+
+// In your course.service.ts
+  addCourse(course: Course, trainerId: number): Observable<Course> {
+    return this.http.post<Course>(
+      `${this.apiUrl}?trainerId=${trainerId}`,
+      course,
+      { headers: this.getAuthHeaders() }
     );
   }
+// In course.service.ts
+  getAllCoursesWithPagination(
+    searchQuery: string = '',
+    category: string = '',
+    page: number = 0,
+    size: number = 6
+  ): Observable<Page<Course>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString());
 
-  addCourse(course: Course): Observable<Course> {
-    return this.http.post<Course>(this.apiUrl, course).pipe(
-      catchError(error => {
-        console.error('Error adding course:', error);
-        return throwError(() => new Error('Failed to add course'));
-      })
+    if (searchQuery) params = params.set('searchQuery', searchQuery);
+    if (category) params = params.set('category', category);
+
+    return this.http.get<Page<Course>>(`${this.apiUrl}/search`, { params });
+  }
+  enrollCurrentUser(courseId: number): Observable<Course> {
+    const user = StorageService.getUser();
+    return this.http.post<Course>(
+      `${this.apiUrl}/${courseId}/enroll`,
+      {},
+      { params: { studentId: user.id.toString() } }
     );
   }
-
   deleteCourse(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
       catchError(error => {
@@ -81,62 +98,161 @@ export class CourseService {
       })
     );
   }
-  getAllStudents(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/students`).pipe(
+
+
+  unenrollStudent(courseId: number, studentId: number): Observable<void> {
+    if (!courseId) {
+      return throwError(() => new Error('Course ID is required'));
+    }
+
+    return this.http.delete<void>(
+      `${this.apiUrl}/${courseId}/students/${studentId}`,
+      {
+        headers: this.getAuthHeaders(),
+        withCredentials: true
+      }
+    ).pipe(
       catchError(error => {
-        console.error('Error fetching students:', error);
+        console.error('Error unenrolling student:', error);
+        return throwError(() => new Error('Failed to unenroll student'));
+      })
+    );
+  }
+  // Enroll a student in a course
+  enrollStudentInCourse(courseId: number, studentId: number): Observable<Course> {
+    return this.http.post<Course>(
+      `${this.apiUrl}/${courseId}/enroll/${studentId}`,
+      null,  // No body needed for this request
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = StorageService.getToken();
+    if (!token) {
+      console.error('No token found');
+      return new HttpHeaders();  // Return empty headers if no token is found
+    }
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    });
+  }
+
+  getMyCourses(): Observable<Course[]> {
+    const user = StorageService.getUser();
+    if (!user) {
+      return throwError(() => new Error('User not authenticated'));
+    }
+
+    let userRole = StorageService.getUserRole();
+    // Remove brackets and ensure proper case
+    userRole = userRole.replace(/[\[\]]/g, '').toUpperCase();
+
+    const params = new HttpParams()
+      .set('userId', user.id.toString())
+      .set('userRole', userRole);
+
+    return this.http.get<Course[]>(`${this.apiUrl}/my-courses`, {
+      params,
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap(courses => console.log('Received courses:', courses)),
+      catchError(error => {
+        console.error('Error fetching courses:', error);
+        return throwError(() => new Error('Failed to fetch courses'));
+      })
+    );
+  }
+  getAllStudentsWithDetails(): Observable<any[]> {
+    const headers = this.getAuthHeaders();
+    return this.http.get<any[]>(`${this.authApiUrl}/students`, {
+      headers: headers,
+      withCredentials: true
+    }).pipe(
+      catchError(error => {
+        if (error.status === 403) {
+          // Redirect to login or show permission error
+          console.error('Permission denied - redirecting to login');
+          // Add your redirect logic here
+        }
+        return throwError(() => new Error('Failed to fetch students with details'));
+      })
+    );
+  }
+  getEnrolledStudentsWithDetails(courseId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${courseId}/students/details`, {
+      headers: this.getAuthHeaders(),
+    }).pipe(
+      catchError(error => {
+        console.error('Error fetching enrolled students:', error);
+        if (error.status === 403) {
+          console.error('Forbidden: You do not have permission to access these details.');
+        }
         return throwError(() => new Error('Failed to fetch students'));
       })
     );
   }
 
-  enrollStudentInCourse(courseId: number, studentId: number): Observable<Course> {
-    return this.http.post<Course>(
-      `${this.apiUrl}/${courseId}/enroll/${studentId}`,
-      {}
+
+  getEnrolledStudents(courseId: number): Observable<number[]> {
+    return this.http.get<number[]>(
+      `${this.apiUrl}/${courseId}/students`,
+      {
+        headers: this.getAuthHeaders(),
+        withCredentials: true
+      }
     ).pipe(
       catchError(error => {
-        console.error('Error enrolling student:', error);
-        return throwError(() => new Error('Failed to enroll student'));
-      })
-    );
-  }
-
-  getEnrolledStudents(courseId: number): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/${courseId}/students`).pipe(
-      catchError(error => {
         console.error('Error fetching enrolled students:', error);
-        return throwError(() => new Error('Failed to fetch enrolled students'));
+        return throwError(() => new Error('Failed to fetch enrolled student IDs'));
+      })
+    );
+  }
+  getAllStudents(): Observable<number[]> {
+    return this.http.get<number[]>(
+      `${this.authApiUrl}/students/ids`,
+      {
+        headers: this.getAuthHeaders()
+      }
+    ).pipe(
+      catchError(error => {
+        console.error('Error fetching all students:', error);
+        return throwError(() => new Error('Failed to fetch student IDs'));
       })
     );
   }
 
-  searchCourses(
+
+
+  searchMyCourses(
     searchQuery: string = '',
     category: string = '',
     page: number = 0,
     size: number = 6
   ): Observable<Page<Course>> {
+    const user = StorageService.getUser();
+    if (!user) {
+      return throwError(() => new Error('User not authenticated'));
+    }
+
+    let userRole = StorageService.getUserRole();
+    userRole = userRole.replace(/[\[\]]/g, '').toUpperCase();
+
     let params = new HttpParams()
       .set('page', page.toString())
-      .set('size', size.toString());
+      .set('size', size.toString())
+      .set('userId', user.id.toString())
+      .set('userRole', userRole);
 
     if (searchQuery) params = params.set('searchQuery', searchQuery);
     if (category) params = params.set('category', category);
 
-    return this.http.get<Page<Course>>(`${this.apiUrl}/search`, { params }).pipe(
-      catchError(error => {
-        console.error('Error searching courses:', error);
-        // Return empty page instead of throwing error
-        return of({
-          content: [],
-          totalElements: 0,
-          totalPages: 0,
-          size: size,
-          number: page,
-          numberOfElements: 0
-        });
-      })
-    );
+    return this.http.get<Page<Course>>(`${this.apiUrl}/my-courses/search`, {
+      params,
+      headers: this.getAuthHeaders()
+    });
   }
+
 }

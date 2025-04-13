@@ -4,12 +4,12 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 import { StorageService } from './storage.service';
 import { catchError, tap } from 'rxjs/operators';
 
-const BASIC_URL = 'http://localhost:8880';
+const BASIC_URL = 'http://localhost:8090';
 export const AUTH_HEADER = 'Authorization';
 
 @Injectable()
 export class AuthService {
-  
+
   constructor(private http: HttpClient, private storage: StorageService) {}
 
   // Register method
@@ -31,19 +31,25 @@ export class AuthService {
 
   // Login method
   login(signinRequest: { email: string, password: string }): Observable<any> {
-    return this.http.post<any>(`${BASIC_URL}/api/v1/auth/signin`, signinRequest, { observe: 'response' })
-      .pipe(
-        tap(_ => this.log('User Authentication')),
-        tap((res: HttpResponse<any>) => {
-          this.storage.saveUser(res.body);
-          const token = res.headers.get(AUTH_HEADER);
-          if (token) {
-            const bearerToken = token.substring(7); // Remove "Bearer " prefix
-            this.storage.saveToken(bearerToken);
-          }
-        }),
-        catchError(this.handleError)
-      );
+    return this.http.post<any>(
+      `${BASIC_URL}/api/v1/auth/signin`,
+      signinRequest,
+      { observe: 'response' }
+    ).pipe(
+      tap((res: HttpResponse<any>) => {
+        const token = res.headers.get('Authorization')?.replace('Bearer ', '');
+        const body = res.body;
+
+        if (token && body) {
+          this.storage.saveToken(token);
+          this.storage.saveUser({
+            id: body.userId,
+            email: signinRequest.email,
+            roles: [body.role] // Ensure this matches backend response
+          });
+        }
+      })
+    );
   }
 
   log(message: string) {

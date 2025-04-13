@@ -1,9 +1,13 @@
 package tn.esprit.esponline.DAO.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
@@ -43,9 +47,13 @@ public class Course {
     private String trainerName;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<CourseResource> resources;
 
     private String qrCodeUrl; // URL to the generated QR code image
+
+    @ElementCollection
+    private Set<Integer> studentIds = new HashSet<>();
 
     // Add getter and setter
     public String getQrCodeUrl() {
@@ -134,5 +142,13 @@ public class Course {
 
     public void setResources(List<CourseResource> resources) {
         this.resources = resources;
+    }
+
+    public Set<Integer> getStudentIds() {
+        return studentIds;
+    }
+
+    public void setStudentIds(Set<Integer> studentIds) {
+        this.studentIds = studentIds;
     }
 }

@@ -16,15 +16,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.esponline.DAO.entities.CategoryEnum;
 import tn.esprit.esponline.DAO.entities.Course;
+import tn.esprit.esponline.Feign.AuthServiceClient;
 import tn.esprit.esponline.Services.ICourseService;
 import tn.esprit.esponline.Services.IFileStorageService;
 import tn.esprit.esponline.Services.QRCodeService;
+import tn.esprit.esponline.config.JwtService;
 
 import java.io.IOException;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Tag(name = "Courses", description = "This web service handles CRUD operations for courses.")
 @RestController
@@ -34,12 +34,16 @@ public class CourseRestController {
     @Autowired
     private ICourseService courseService;
 
+    @Autowired
+    private JwtService jwtService;
 
     @Autowired
     private IFileStorageService fileStorageService;
 
     @Autowired
     private QRCodeService qrCodeService;
+    @Autowired
+    private AuthServiceClient authServiceClient;
 
     @Operation(summary = "Retrieve all courses", description = "This endpoint retrieves all courses from the database.")
     @ApiResponses(value = {
@@ -51,6 +55,29 @@ public class CourseRestController {
         return courseService.getAllCourses();
     }
 
+    @GetMapping("/my-courses")
+    public ResponseEntity<List<Course>> getMyCourses(
+            @RequestParam Integer userId,
+            @RequestParam String userRole) {
+
+        System.out.println("[DEBUG] Received request - userId: " + userId + ", role: " + userRole);
+        String normalizedRole = userRole.replaceAll("[\\[\\]]", "");
+        System.out.println("[DEBUG] Normalized role: " + normalizedRole);
+
+        List<Course> courses = Collections.emptyList();
+
+        if ("TRAINER".equalsIgnoreCase(normalizedRole)) {
+            courses = courseService.getCoursesByTrainer(userId);
+            System.out.println("[DEBUG] Found " + courses.size() + " courses for trainer");
+        } else if ("STUDENT".equalsIgnoreCase(normalizedRole)) {
+            courses = courseService.getCoursesByStudent(userId);
+            System.out.println("[DEBUG] Found " + courses.size() + " courses for student");
+        }
+
+        return ResponseEntity.ok(courses);
+    }
+
+
     @Operation(summary = "Retrieve course by ID", description = "This endpoint retrieves a course by its ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved course"),
@@ -58,26 +85,28 @@ public class CourseRestController {
     })
 
 
-
     @PostMapping
-    public ResponseEntity<Course> addCourse(@Valid @RequestBody Course course) throws IOException, WriterException {
-        Course savedCourse = courseService.addCourse(course);
+    public ResponseEntity<Course> createCourse(
+            @Valid @RequestBody Course course,
+            @RequestParam Long trainerId) throws IOException, WriterException {
 
+        // Add the course with the trainer ID
+        Course savedCourse = courseService.addCourse(course, Math.toIntExact(trainerId));
 
-        // Updated to only include name and description
+        // Generate the QR code
         String qrText = String.format("Course: %s\nDescription: %s",
                 savedCourse.getTitle(), savedCourse.getDescription());
 
         byte[] qrCode = qrCodeService.generateQRCodeImage(qrText, 250, 250);
         String qrCodeUrl = fileStorageService.uploadQRCode(qrCode, "qr-code-" + savedCourse.getId() + ".png");
-        // Update course with QR code URL
+
+        // Update the course with the QR code URL
         savedCourse.setQrCodeUrl(qrCodeUrl);
         courseService.updateCourse(savedCourse, savedCourse.getId());
 
-
-
         return ResponseEntity.status(HttpStatus.CREATED).body(savedCourse);
     }
+
     @GetMapping("/{id}/qr-code-base64")
     public ResponseEntity<Map<String, String>> getCourseQRCodeBase64(@PathVariable int id) {
         try {
@@ -157,7 +186,7 @@ public class CourseRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    @Operation(summary = "Update an existing course", description = "This endpoint updates a course by its ID.")
+    @Operation(summary = "Update an existing course", description = "This endpoint updates a course by its ID and regenerates its QR code.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully updated course"),
             @ApiResponse(responseCode = "404", description = "Course not found")
@@ -165,16 +194,27 @@ public class CourseRestController {
     @PutMapping("/{id}")
     public ResponseEntity<Course> updateCourse(
             @PathVariable int id,
-            @Valid @RequestBody Course course) {
+            @Valid @RequestBody Course course) throws IOException, WriterException {
 
+        // First update the course
         Course updatedCourse = courseService.updateCourse(course, id);
-        if (updatedCourse != null) {
-            return ResponseEntity.ok(updatedCourse);
-        } else {
+        if (updatedCourse == null) {
             return ResponseEntity.notFound().build();
         }
-    }
 
+        // Regenerate QR code with updated info
+        String qrText = String.format("Course: %s\nDescription: %s",
+                updatedCourse.getTitle(), updatedCourse.getDescription());
+
+        byte[] qrCode = qrCodeService.generateQRCodeImage(qrText, 250, 250);
+        String qrCodeUrl = fileStorageService.uploadQRCode(qrCode, "qr-code-" + updatedCourse.getId() + ".png");
+
+        // Update the course with new QR code
+        updatedCourse.setQrCodeUrl(qrCodeUrl);
+        Course finalUpdatedCourse = courseService.updateCourse(updatedCourse, updatedCourse.getId());
+
+        return ResponseEntity.ok(finalUpdatedCourse);
+    }
     @Operation(summary = "Delete a course", description = "This endpoint deletes a course by its ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Successfully deleted course"),
@@ -187,8 +227,128 @@ public class CourseRestController {
 
 
 
+    @PostMapping("/{courseId}/enroll/{studentId}")
+    public ResponseEntity<Course> enrollStudent(
+            @PathVariable int courseId,
+            @PathVariable Integer studentId,
+            @RequestHeader("Authorization") String authHeader) {
 
+        String token = authHeader.substring(7);
+        if (!jwtService.isTokenValid(token)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
 
+        try {
+            Course course = courseService.enrollStudentInCourse(courseId, studentId);
+            return ResponseEntity.ok(course);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    // In your CourseRestController.java
+    @GetMapping("/students/details")
+    public ResponseEntity<List<Map<String, Object>>> getAllStudentsWithDetails(
+            @RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        if (!jwtService.isTokenValid(token)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            List<Map<String, Object>> students = authServiceClient.getAllStudents();
+            return ResponseEntity.ok(students);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    @GetMapping("/{courseId}/students")
+    public ResponseEntity<Set<Integer>> getEnrolledStudents(@PathVariable int courseId) {
+        Course course = courseService.getCourseById(courseId);
+        if (course == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(course.getStudentIds());
+    }
+    @GetMapping("/{courseId}/students/details")
+    public ResponseEntity<List<Map<String, Object>>> getEnrolledStudentsWithDetails(
+            @PathVariable int courseId,
+            @RequestHeader("Authorization") String authHeader) {
+
+        String token = authHeader.substring(7);
+        if (!jwtService.isTokenValid(token)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            Course course = courseService.getCourseById(courseId);
+            if (course == null || course.getStudentIds() == null) {
+                return ResponseEntity.ok(Collections.emptyList());
+            }
+
+            List<Map<String, Object>> students = course.getStudentIds().stream()
+                    .map(studentId -> authServiceClient.getStudentById(studentId))
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(students);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @DeleteMapping("/{courseId}/students/{studentId}")
+    public ResponseEntity<Void> removeStudentFromCourse(
+            @PathVariable int courseId,
+            @PathVariable int studentId,
+            @RequestHeader("Authorization") String authHeader) {
+
+        String token = authHeader.substring(7);
+        if (!jwtService.isTokenValid(token)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            courseService.removeStudentFromCourse(courseId, studentId);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/my-courses/search")
+    public ResponseEntity<Page<Course>> searchMyCourses(
+            @RequestParam(required = false) String searchQuery,
+            @RequestParam(required = false) String category,
+            @RequestParam Integer userId,
+            @RequestParam String userRole,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "6") int size) {
+
+        try {
+            String normalizedRole = userRole.replaceAll("[\\[\\]]", "");
+            CategoryEnum categoryEnum = null;
+
+            if (category != null && !category.isEmpty()) {
+                try {
+                    categoryEnum = CategoryEnum.valueOf(category.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    return ResponseEntity.badRequest().build();
+                }
+            }
+
+            Page<Course> courses;
+            if ("TRAINER".equalsIgnoreCase(normalizedRole)) {
+                courses = courseService.searchCoursesByTrainer(searchQuery, categoryEnum, userId, page, size);
+            } else if ("STUDENT".equalsIgnoreCase(normalizedRole)) {
+                courses = courseService.searchCoursesByStudent(searchQuery, categoryEnum, userId, page, size);
+            } else {
+                return ResponseEntity.badRequest().build();
+            }
+
+            return ResponseEntity.ok(courses);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
     @GetMapping("/search")
     public ResponseEntity<Page<Course>> searchCourses(
             @RequestParam(required = false) String searchQuery,

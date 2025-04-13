@@ -30,21 +30,23 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for stateless APIs
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Define CORS configuration
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.disable()) // Disable CORS here (handled by Gateway)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/forgot-password",
-                                "/api/v1/auth/reset-password").permitAll()
-                        .requestMatchers("/api/v1/auth/**")
-                        //toute autre requête doit être authentifiée
-                        .permitAll().anyRequest().authenticated()
+                        .requestMatchers(
+                                "/api/v1/auth/signin",
+                                "/api/v1/auth/signup",
+                                "/api/v1/auth/refresh-token",
+                                    "/courses/**"
+                        ).permitAll()
+                        .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
-
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();

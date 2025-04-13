@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import {StorageService} from '../shared/auth/storage.service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,7 +16,23 @@ export class ReviewService {
     return this.http.post(this.apiUrl, review);
   }
 
- // review.service.ts 
+  // Add this method
+  hasStudentReviewed(studentId: number, courseId: number): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/has-reviewed`, {
+      params: {
+        studentId: studentId.toString(),
+        courseId: courseId.toString()
+      },
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = StorageService.getToken();
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+  }
 
 getAIRecommendations(courseId: number): Observable<{ recommendations: string }> {
   console.log('Fetching AI recommendations for Course ID:', courseId);

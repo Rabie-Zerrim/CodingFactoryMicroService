@@ -10,9 +10,9 @@ export class Course {
   rate!: number;
   image!: string;
   categoryCourse!: CategoryEnum | string; // Allow both enum and string
-  trainerId?: number;
-  trainerName?: string;
-  resources?: CourseResource[];
-  qrCodeUrl?: string;
-
+  trainerId!: number;
+  resources!: CourseResource[];
+  qrCodeUrl!: string;
+  hasReviewed?: boolean; // Made optional
 }
+
