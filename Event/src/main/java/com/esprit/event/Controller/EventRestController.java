@@ -2,20 +2,16 @@ package com.esprit.event.Controller;
 
 import com.esprit.event.DAO.entities.Centre;
 import com.esprit.event.DAO.entities.Event;
-import com.esprit.event.DAO.entities.User;
 import com.esprit.event.Services.IEventService;
 import com.esprit.event.Services.GeminiAiService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -126,8 +122,8 @@ public class EventRestController {
         }
     }
     @GetMapping("/{eventID}/participants")
-    public ResponseEntity<List<User>> getParticipants(@PathVariable int eventID) {
-        List<User> participants = eventService.getParticipants(eventID);
+    public ResponseEntity<List<Integer>> getParticipants(@PathVariable int eventID) {
+        List<Integer> participants = eventService.getParticipants(eventID);
         return ResponseEntity.ok(participants);
     }
     @DeleteMapping("/deroll/{eventID}/{userID}")
@@ -151,5 +147,9 @@ public class EventRestController {
 
         // Sort the filtered events by date
         return eventService.sortEventsByDate(events);
+    }
+    @GetMapping("/download-ics/{eventId}")
+    public byte[] downloadICS(@PathVariable int eventId) {
+        return eventService.generateICSFile(eventId);
     }
 }

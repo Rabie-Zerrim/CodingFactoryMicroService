@@ -3,36 +3,29 @@ package com.esprit.event.Services;
 import com.esprit.event.DAO.entities.*;
 import com.esprit.event.DAO.repository.EventRepository;
 import com.esprit.event.DAO.repository.ICentreRepository;
-import com.esprit.event.DAO.repository.UserRepository;
+import com.esprit.event.OpenFeign.UserClient;
+import com.esprit.event.OpenFeign.UserDTO;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.TypedQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAdjusters;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -45,15 +38,22 @@ public class EventServiceImpl implements IEventService{
 
     @Autowired
     private EventRepository eventRepo;
-    @Autowired
-    private UserRepository userRepo;
+    
     @Autowired
     private ICentreRepository centreRepo;
     @Autowired
     private JavaMailSender mailSender;
     @Autowired
     private GoogleCalendarService googleCalendarService;
+
+    private final UserClient userClient;
+
     private final Path uploadDir = Paths.get("/uploads");
+
+    public EventServiceImpl(UserClient userClient) {
+        this.userClient = userClient;
+    }
+
     @Override
     public ResponseEntity<Resource> getEventImage(String imageUrl) {
         try {
@@ -77,17 +77,13 @@ public class EventServiceImpl implements IEventService{
     }
     @Override
     public Event addEvent(Event event, int userID) throws IOException {
-        User user = userRepo.findById(userID).orElse(null);
 
-        if (!(user.getRole().getName() == RoleNameEnum.ADMIN || user.getRole().getName() == RoleNameEnum.TRAINER)) {
-            throw new IllegalStateException("You do not have permission to add an event. Only Admins and Trainers can add events.");
-        }
         if (event.getImageUrl() != null && !event.getImageUrl().isEmpty()) {
             String imageUrl = saveBase64Image(event.getImageUrl());
             event.setImageUrl(imageUrl);
         }
         // Set the event creator
-        event.setEventCreator(user);
+        event.setEventCreator(userID);
 
         // The imageUrl is already part of the event object passed in the request body
         return eventRepo.save(event);
@@ -141,8 +137,8 @@ public class EventServiceImpl implements IEventService{
     }
     @Override
     public Event updateEvent(int id, Event updatedEvent) {
-
         return eventRepo.findById(id).map(existingEvent -> {
+            // Update event properties
             existingEvent.setEventName(updatedEvent.getEventName());
             existingEvent.setEventDescription(updatedEvent.getEventDescription());
             existingEvent.setEventDate(updatedEvent.getEventDate());
@@ -165,17 +161,16 @@ public class EventServiceImpl implements IEventService{
                     .orElseThrow(() -> new EntityNotFoundException("Centre with ID " + updatedEvent.getCentre().getCentreID() + " not found"));
             existingEvent.setCentre(centre);
 
-            // Fetch and set the User entity for eventCreator
-            User eventCreator = userRepo.findById(updatedEvent.getEventCreator().getId())
-                    .orElseThrow(() -> new EntityNotFoundException("User with ID " + updatedEvent.getEventCreator().getId() + " not found"));
-            existingEvent.setEventCreator(eventCreator);
+            // Set the eventCreator directly with the user ID
+            existingEvent.setEventCreator(updatedEvent.getEventCreator());
 
             // Update participants if necessary
             existingEvent.setParticipants(updatedEvent.getParticipants());
 
-            return eventRepo.save(existingEvent); // ✅ Save changes
+            return eventRepo.save(existingEvent); // Save changes
         }).orElseThrow(() -> new EntityNotFoundException("Event with ID " + id + " not found"));
     }
+
 
     @Override
     public void deleteEvent(int id) {
@@ -226,14 +221,17 @@ public class EventServiceImpl implements IEventService{
     public Event enrollToEvent(int eventID, int userID, String accessToken) {
         Event eventToAttend= eventRepo.findById(eventID)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found"));
-        User user = userRepo.findById(userID)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        if (eventToAttend.getParticipants().contains(user)) {
+        UserDTO user = userClient.getUserById(userID);
+        if (eventToAttend.getParticipants().contains(userID)) {
             throw new IllegalStateException("User is already enrolled in this event.");
         }
         else{
-        eventToAttend.getParticipants().add(user);
-        googleCalendarService.createGoogleCalendarEvent(eventToAttend,accessToken);
+        eventToAttend.getParticipants().add(userID);
+        if(accessToken!=null && !accessToken.isEmpty())
+        {
+            googleCalendarService.createGoogleCalendarEvent(eventToAttend,accessToken);
+        }
+
         String subject = "Welcome to the " + eventToAttend.getEventName() + "!";
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -254,7 +252,7 @@ public class EventServiceImpl implements IEventService{
     }
 
     @Override
-    public List<User> getParticipants(int eventID) {
+    public List<Integer> getParticipants(int eventID) {
         Event event=eventRepo.findById(eventID).orElseThrow(() -> new EntityNotFoundException("Event not found"));
         return event.getParticipants();
     }
@@ -263,12 +261,10 @@ public class EventServiceImpl implements IEventService{
     public Event derollFromEvent(int eventID, int userID) {
         Event eventToDeroll= eventRepo.findById(eventID)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found"));
-        User user = userRepo.findById(userID)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        if (!eventToDeroll.getParticipants().contains(user)) {
+        if (!eventToDeroll.getParticipants().contains(userID)) {
             throw new IllegalStateException("User is not enrolled in this event.");
         }
-        eventToDeroll.getParticipants().remove(user);
+        eventToDeroll.getParticipants().remove(userID);
         return eventRepo.save(eventToDeroll);
     }
 
@@ -390,4 +386,38 @@ public class EventServiceImpl implements IEventService{
                 return true;
         }
     }
+    @Override
+    public byte[] generateICSFile(int eventID) {
+        Event event=eventRepo.findById(eventID).orElseThrow(null);
+        StringBuilder sb = new StringBuilder();
+
+        LocalDateTime localDateTime = event.getEventDate();
+        ZonedDateTime zonedStart = localDateTime.atZone(ZoneId.of("Africa/Tunis"));
+        ZonedDateTime zonedEnd = zonedStart.plusHours(2);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneOffset.UTC);
+
+        String dtStart = formatter.format(zonedStart.toInstant());
+        String dtEnd = formatter.format(zonedEnd.toInstant());
+        String uid = UUID.randomUUID().toString();
+
+        sb.append("BEGIN:VCALENDAR\n")
+                .append("VERSION:2.0\n")
+                .append("PRODID:-//YourApp//EventManager//EN\n")
+                .append("CALSCALE:GREGORIAN\n")
+                .append("METHOD:PUBLISH\n")
+                .append("BEGIN:VEVENT\n")
+                .append("UID:").append(uid).append("\n")
+                .append("SUMMARY:").append(event.getEventName()).append("\n")
+                .append("DESCRIPTION:").append(event.getEventDescription()).append("\n")
+                .append("LOCATION:").append(event.getCentre().getCentreName()).append("\n")
+                .append("DTSTART:").append(dtStart).append("\n")
+                .append("DTEND:").append(dtEnd).append("\n")
+                .append("DTSTAMP:").append(formatter.format(Instant.now())).append("\n")
+                .append("END:VEVENT\n")
+                .append("END:VCALENDAR");
+
+        return sb.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
 }

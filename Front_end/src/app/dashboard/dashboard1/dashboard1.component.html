@@ -1,0 +1,187 @@
+<!--Statistics cards Starts-->
+<div class="row" (resized)="onResized($event)">
+  <div class="col-xl-3 col-lg-6 col-md-6 col-12">
+    <div class="card gradient-purple-love">
+      <div class="card-content">
+        <div class="card-body py-0">
+          <div class="media pb-1">
+            <div class="media-body white text-left">
+              <h3 class="font-large-1 white mb-0">{{totalCourses}}</h3>
+              <span>Total Courses</span>
+            </div>
+            <div class="media-right white text-right">
+              <i class="ft-book font-large-1"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-lg-6 col-md-6 col-12">
+    <div class="card gradient-ibiza-sunset">
+      <div class="card-content">
+        <div class="card-body py-0">
+          <div class="media pb-1">
+            <div class="media-body white text-left">
+              <h3 class="font-large-1 white mb-0">{{totalEnrollments}}</h3>
+              <span>Total Enrollments</span>
+            </div>
+            <div class="media-right white text-right">
+              <i class="ft-users font-large-1"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-lg-6 col-md-6 col-12">
+    <div class="card gradient-mint">
+      <div class="card-content">
+        <div class="card-body py-0">
+          <div class="media pb-1">
+            <div class="media-body white text-left">
+              <h3 class="font-large-1 white mb-0">{{topRatedCourses[0]?.rate | number:'1.1-1' || 'N/A'}}</h3>
+              <span>Top Course Rating</span>
+            </div>
+            <div class="media-right white text-right">
+              <i class="ft-star font-large-1"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-lg-6 col-md-6 col-12">
+    <div class="card gradient-king-yna">
+      <div class="card-content">
+        <div class="card-body py-0">
+          <div class="media pb-1">
+            <div class="media-body white text-left">
+              <h3 class="font-large-1 white mb-0">{{mostEnrolledCourses[0]?.studentIds?.length || 0}}</h3>
+              <span>Most Enrolled Course</span>
+            </div>
+            <div class="media-right white text-right">
+              <i class="ft-award font-large-1"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--Statistics cards Ends-->
+
+
+<!-- Top Courses Section -->
+<div class="row match-height">
+  <div class="col-xl-6 col-lg-12 col-12">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="card-title">Top Rated Courses</h4>
+      </div>
+      <div class="card-content">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table text-center m-0">
+              <thead>
+                <tr>
+                  <th>Course</th>
+                  <th>Rating</th>
+                  <th>Enrollments</th>
+                  <th>Category</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let course of topRatedCourses">
+                  <td>{{course.title}}</td>
+                  <td>
+                    <span class="badge badge-pill bg-light-success">
+                      {{course.rate | number:'1.1-1'}}
+                    </span>
+                  </td>
+                  <td>{{course.studentIds?.length || 0}}</td>
+                  <td>
+                    <span class="badge" [style.background-color]="getCategoryColor(course.categoryCourse)">
+                      {{course.categoryCourse}}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6 col-lg-12 col-12">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="card-title">Most Enrolled Courses</h4>
+      </div>
+      <div class="card-content">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table text-center m-0">
+              <thead>
+                <tr>
+                  <th>Course</th>
+                  <th>Enrollments</th>
+                  <th>Rating</th>
+                  <th>Category</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let course of mostEnrolledCourses">
+                  <td>{{course.title}}</td>
+                  <td>
+                    <span class="badge badge-pill bg-light-primary">
+                      {{course.studentIds?.length || 0}}
+                    </span>
+                  </td>
+                  <td>{{course.rate | number:'1.1-1'}}</td>
+                  <td>
+                    <span class="badge" [style.background-color]="getCategoryColor(course.categoryCourse)">
+                      {{course.categoryCourse}}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Enrollments by Category Chart -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="card-title">Enrollments by Category</h4>
+      </div>
+      <div class="card-content">
+        <div class="card-body">
+          <div id="enrollments-by-category">
+            <x-chartist class="height-350" [data]="enrollmentsByCategory.data" [type]="enrollmentsByCategory.type"
+              [options]="enrollmentsByCategory.options" [responsiveOptions]="enrollmentsByCategory.responsiveOptions"
+              [events]="enrollmentsByCategory.events">
+            </x-chartist>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Indicator -->
+<div *ngIf="loadingStats" class="loading-overlay">
+  <div class="spinner-border text-primary" role="status">
+    <span class="sr-only">Loading...</span>
+  </div>
+</div>
