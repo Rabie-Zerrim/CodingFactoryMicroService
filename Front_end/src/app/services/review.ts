@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import {catchError, tap} from 'rxjs/operators';
 import {StorageService} from '../shared/auth/storage.service';
 
 @Injectable({
@@ -13,7 +13,18 @@ export class ReviewService {
   constructor(private http: HttpClient) {}
 
   addReview(review: any): Observable<any> {
-    return this.http.post(this.apiUrl, review);
+    return this.http.post(this.apiUrl, review).pipe(
+      catchError(error => {
+        // Convert the error to a consistent format
+        if (error.error && typeof error.error === 'object') {
+          throw error; // Already parsed error
+        } else if (typeof error.error === 'string') {
+          throw { ...error, error: { message: error.error } };
+        } else {
+          throw { ...error, error: { message: error.message || 'Unknown error' } };
+        }
+      })
+    );
   }
 
   // Add this method

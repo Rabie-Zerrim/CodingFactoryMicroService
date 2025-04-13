@@ -91,7 +91,18 @@ body {
   padding: 8px;
   margin-top: 8px;
 }
+/* In your component SCSS */
+.add-review-button {
+  &.reviewed {
+    background-color: #28a745 !important; /* Green color */
+    border-color: #28a745 !important;
 
+    &:hover {
+      cursor: default;
+      transform: none;
+    }
+  }
+}
 .modal-actions {
   display: flex;
   justify-content: flex-end;

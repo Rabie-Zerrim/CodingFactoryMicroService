@@ -127,41 +127,7 @@ export class CourseComponent implements OnInit {
       }
     });
   }
-  private handleCoursesResponse(page: Page<Course>): void {
-    // Process the courses
-    const processedCourses = page.content.map(course => ({
-      ...course,
-      image: this.getFile(course.image),
-      hasReviewed: false // Default value
-    }));
 
-    // Update the page object
-    this.page = {
-      content: processedCourses,
-      totalElements: page.totalElements,
-      totalPages: page.totalPages,
-      size: page.size,
-      number: page.number,
-      numberOfElements: page.numberOfElements
-    };
-
-    // Only check reviews if user is student and reviewService exists
-    if (this.isStudentLoggedIn && this.reviewService?.hasStudentReviewed) {
-      const studentId = StorageService.getUserId();
-      if (studentId) {
-        processedCourses.forEach(course => {
-          this.reviewService.hasStudentReviewed(studentId, course.id)
-            .subscribe(hasReviewed => {
-              course.hasReviewed = hasReviewed;
-              this.cdr.detectChanges();
-            });
-        });
-      }
-    }
-
-    this.loading = false;
-    this.cdr.detectChanges();
-  }
   private handleCoursesError(err: any): void {
     console.error('Error loading courses:', err);
     this.loading = false;
@@ -286,15 +252,63 @@ export class CourseComponent implements OnInit {
     this.searchCourses(); // Refresh the list
     this.cdr.detectChanges();
   }
+  private handleCoursesResponse(page: Page<Course>): void {
+    const processedCourses = page.content.map(course => ({
+      ...course,
+      image: this.getFile(course.image),
+      hasReviewed: false
+    }));
+
+    this.page = {
+      content: processedCourses,
+      totalElements: page.totalElements,
+      totalPages: page.totalPages,
+      size: page.size,
+      number: page.number,
+      numberOfElements: page.numberOfElements
+    };
+
+    // Check reviews for each course if student is logged in
+    if (this.isStudentLoggedIn) {
+      const studentId = StorageService.getUserId();
+      if (studentId) {
+        processedCourses.forEach(course => {
+          this.reviewService.hasStudentReviewed(studentId, course.id)
+            .subscribe({
+              next: (hasReviewed) => {
+                course.hasReviewed = hasReviewed;
+                this.cdr.detectChanges();
+              },
+              error: (err) => {
+                console.error('Error checking review status:', err);
+                course.hasReviewed = false;
+                this.cdr.detectChanges();
+              }
+            });
+        });
+      }
+    }
+
+    this.loading = false;
+    this.cdr.detectChanges();
+  }
 
   openReviewModal(course: Course): void {
+    if (course.hasReviewed) {
+      return; // Prevent opening modal if already reviewed
+    }
     this.selectedCourse = course;
     this.showReviewModal = true;
     this.cdr.detectChanges();
   }
-
   onReviewAdded(): void {
-    this.searchCourses(); // Refresh the course list to show updated ratings
+    // Refresh the course list to show updated ratings
+    this.searchCourses();
+
+    // Also update the selected course if it exists
+    if (this.selectedCourse) {
+      this.selectedCourse.hasReviewed = true;
+    }
     this.cdr.detectChanges();
   }
 

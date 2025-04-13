@@ -224,7 +224,11 @@ export class CourseService {
     );
   }
 
-
+  hasStudentReviewed(studentId: number, courseId: number): Observable<{hasReviewed: boolean}> {
+    return this.http.get<{hasReviewed: boolean}>(
+      `${this.apiUrl}/reviews/has-reviewed/${studentId}/${courseId}`
+    );
+  }
 
   searchMyCourses(
     searchQuery: string = '',

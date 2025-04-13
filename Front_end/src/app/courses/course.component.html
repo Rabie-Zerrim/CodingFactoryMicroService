@@ -71,8 +71,16 @@
                 <i *ngFor="let star of getEmptyStars(course.rate)" class="bi bi-star star"></i>
               </div>
               <span class="rating-value">{{ course.rate | number:'1.1-1' }}</span>
-              <button (click)="openReviewModal(course)" class="add-review-button round">
-                <i class="bi bi-star-fill icon"></i> Rate
+              <!-- In your course.component.html -->
+              <!-- course.component.html -->
+              <button *ngIf="isStudentLoggedIn"
+                      (click)="!course.hasReviewed && openReviewModal(course)"
+                      class="add-review-button round"
+                      [class.reviewed]="course.hasReviewed"
+                      [disabled]="course.hasReviewed">
+                <i *ngIf="!course.hasReviewed" class="bi bi-star-fill icon"></i>
+                <i *ngIf="course.hasReviewed" class="bi bi-check-circle-fill icon"></i>
+                {{ course.hasReviewed ? 'Reviewed' : 'Rate' }}
               </button>
             </div>
           </div>
