@@ -17,10 +17,10 @@ export class EventService {
     // Make sure the API endpoint supports pagination using 'page' and 'size' as query parameters
     return this.http.get<any>(`${this.apiUrl}/all?page=${page}&size=${size}`);
   }
-  getAllCenters():Observable<Centre[]>
+ /* getAllCenters():Observable<Centre[]>
   {
     return this.http.get<Centre[]>(this.apiUrl+"/centers");
-  }
+  }*/
   getEventById(id:number):Observable<Event>
   {
     return this.http.get<Event>(this.apiUrl+"/"+id);
@@ -84,6 +84,13 @@ getFilteredEvents(filters: any): Observable<any[]> {
   if (filters.selectedTimePeriod) {
     params = params.set('timePeriod', filters.selectedTimePeriod);
   }
+  if (filters.enrolledUserId) {
+    params = params.set('enrolledUserId', filters.enrolledUserId);
+  }
+  if (filters.createdBy) {
+    params = params.set('createdBy', filters.createdBy);
+  }
+  
   return this.http.get<any[]>(this.apiUrl+"/filtredEvents", { params });
 }
 downloadIcs(eventId: number): Observable<Blob> {
@@ -95,4 +102,14 @@ downloadIcs(eventId: number): Observable<Blob> {
 getUserCreator(id: number): Observable<User> {
   return this.http.get<User>(`http://localhost:8090/api/v1/auth/user/${id}`);
 }
+
+// Get all centers
+  getAllCenters(): Observable<Centre[]> {
+    return this.http.get<any[]>('http://localhost:8090/Partnership/api/centers/all');
+  }
+
+  // Get a center by ID
+  getCenterById(id: number): Observable<Centre> {
+    return this.http.get<any>(`http://localhost:8090/Partnership/api/centers/getCenterById/${id}`);
+  }
 }

@@ -1,6 +1,5 @@
 package com.esprit.event.Controller;
 
-import com.esprit.event.DAO.entities.Centre;
 import com.esprit.event.DAO.entities.Event;
 import com.esprit.event.Services.IEventService;
 import com.esprit.event.Services.GeminiAiService;
@@ -131,19 +130,18 @@ public class EventRestController {
         Event updatedEvent = eventService.derollFromEvent(eventID, userID);
         return ResponseEntity.ok(updatedEvent);
     }
-    @GetMapping("/centers")
-    public ResponseEntity<List<Centre>> getAllCenters() {
-        List<Centre> centers = eventService.getCenters();
-        return ResponseEntity.ok(centers);
-    }
+
     @GetMapping("/filtredEvents")
     public  List<Event> getFilteredEvents(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) String timePeriod) {
-        List<Event> events = eventService.getFilteredEvents(search, category, startDate, endDate, timePeriod);
+            @RequestParam(required = false) String timePeriod,
+            @RequestParam(required = false) Integer enrolledUserId,
+            @RequestParam(required = false) Integer createdBy)
+    {
+        List<Event> events = eventService.getFilteredEvents(search, category, startDate, endDate, timePeriod,enrolledUserId,createdBy);
 
         // Sort the filtered events by date
         return eventService.sortEventsByDate(events);

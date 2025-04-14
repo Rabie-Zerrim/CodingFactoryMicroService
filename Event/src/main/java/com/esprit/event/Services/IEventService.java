@@ -1,6 +1,5 @@
 package com.esprit.event.Services;
 
-import com.esprit.event.DAO.entities.Centre;
 import com.esprit.event.DAO.entities.Event;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -17,14 +16,16 @@ public interface IEventService {
     public Event enrollToEvent(int eventID,int userID, String accessToken);
     public List<Integer> getParticipants(int eventID);
     public Event derollFromEvent(int eventID,int userID);
-    public List<Centre> getCenters();
+
     public void sendMail(String toSend,String subject,String Body);
     public ResponseEntity<Resource> getEventImage(String imageUrl);
     public List<Event> getFilteredEvents(String searchQuery,
                                          String category,
                                          String startDate,
                                          String endDate,
-                                         String timePeriod);
+                                         String timePeriod,
+                                         Integer enrolledUserId,
+                                         Integer createdBy);
 
     public List<Event> sortEventsByDate(List<Event> events);
     public byte[] generateICSFile(int eventID);
