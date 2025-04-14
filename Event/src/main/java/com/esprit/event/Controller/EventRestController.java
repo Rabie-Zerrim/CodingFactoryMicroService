@@ -5,6 +5,7 @@ import com.esprit.event.Services.IEventService;
 import com.esprit.event.Services.GeminiAiService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,12 @@ public class EventRestController {
     private IEventService eventService;
     @Autowired
     private GeminiAiService geminiAIService;
-
+    @Value("${welcome.message}")
+    private String welcomeMessage;
+    @GetMapping("/welcome")
+    public String welcome() {
+        return welcomeMessage;
+    }
     @PostMapping("/generate-description")
     public ResponseEntity<Map<String, String>> generateEventDescription(@RequestBody Event event) throws IOException {
         // Use the OpenAI service to generate a description based on the event details
