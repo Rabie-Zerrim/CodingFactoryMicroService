@@ -6,8 +6,13 @@ This project is a **Course Management System** developed as part of the coursewo
 ## Features
 ### Course Management
 - Create, update, and delete courses.
-- Upload course resources (documents, videos, images) to **Supabase** cloud storage.
+- Upload course image  to **Supabase** cloud storage.
 - Advanced search, filtering, and pagination.
+- Qr code
+
+
+### Review Management
+- Create, update, and delete Review.
 - AI-powered review suggestions using **Gemini AI**.
 
 ### Event Management
@@ -38,9 +43,12 @@ This project is a **Course Management System** developed as part of the coursewo
 
 ### Backend
 - Spring Boot
-- Spring Security with JWT
+- Node.js
+- KeyCloack
 - MySQL
+- H2
 - JPA (Hibernate)
+-
 
 ### Cloud Storage
 - **Supabase**

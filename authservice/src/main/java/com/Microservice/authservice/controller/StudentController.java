@@ -3,6 +3,7 @@ package com.Microservice.authservice.controller;
 import com.Microservice.authservice.entities.Role;
 import com.Microservice.authservice.entities.User;
 import com.Microservice.authservice.repository.UserRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -28,9 +29,11 @@ public class StudentController {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping
-    public List<Map<String, Object>> getAllStudents() {
-        return getStudentUsers().stream()
+    @GetMapping("/students")
+    public ResponseEntity<List<Map<String, Object>>> getAllStudents() {
+        List<User> students = getStudentUsers();
+
+        List<Map<String, Object>> response = students.stream()
                 .map(user -> {
                     Map<String, Object> studentMap = new HashMap<>();
                     studentMap.put("id", user.getId());
@@ -39,19 +42,21 @@ public class StudentController {
                     return studentMap;
                 })
                 .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{id}")
-    public Map<String, Object> getStudentById(@PathVariable Integer id) {
+    @GetMapping("/students/{id}")
+    public ResponseEntity<Map<String, Object>> getStudentById(@PathVariable("id") Integer id) {
         return userRepository.findById(id)
                 .map(user -> {
                     Map<String, Object> studentMap = new HashMap<>();
                     studentMap.put("id", user.getId());
                     studentMap.put("name", user.getName());
                     studentMap.put("email", user.getEmail());
-                    return studentMap;
+                    return ResponseEntity.ok(studentMap);
                 })
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/user/{id}")
@@ -60,5 +65,4 @@ public class StudentController {
     }
     private List<User> getStudentUsers() {
         return userRepository.findAllByRolesContaining(Role.STUDENT);
-    }
-}
+    }}

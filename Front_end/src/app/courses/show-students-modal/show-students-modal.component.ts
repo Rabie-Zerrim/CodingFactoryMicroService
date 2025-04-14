@@ -1,54 +1,44 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CourseService } from '../../services/course.service';
-import Swal from 'sweetalert2';
+import {Component, Input, Output, EventEmitter, OnInit} from '@angular/core';
+import { User } from '../../models/User';
+import {CourseService} from '../../services/course.service';
 
 @Component({
   selector: 'app-show-students-modal',
   templateUrl: './show-students-modal.component.html',
   styleUrls: ['./show-students-modal.component.scss']
 })
-export class ShowStudentsModalComponent {
+export class ShowStudentsModalComponent implements OnInit {
   @Input() showModal: boolean = false;
-  @Input() students: any[] = [];
-  @Input() courseId: number; // Make sure this is properly set
+  @Input() courseId: number | null = null;
   @Output() showModalChange = new EventEmitter<boolean>();
-  @Output() studentRemoved = new EventEmitter<void>();
+
+  @Input() students: User[] = [];
+  loading = false;
 
   constructor(private courseService: CourseService) {}
+
+  ngOnInit(): void {
+    if (this.courseId) {
+      this.loadStudents();
+    }
+  }
+
+  loadStudents(): void {
+    this.loading = true;
+    this.courseService.getEnrolledStudentsWithDetails(this.courseId!).subscribe({
+      next: (students) => {
+        this.students = students;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error fetching students:', error);
+        this.loading = false;
+      }
+    });
+  }
 
   closeModal(): void {
     this.showModal = false;
     this.showModalChange.emit(this.showModal);
-  }
-
-  unenrollStudent(studentId: number): void {
-    if (!this.courseId) {
-      console.error('Course ID is undefined');
-      return;
-    }
-    
-    Swal.fire({
-      title: 'Are you sure?',
-      text: 'Do you want to remove this student from the course?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, remove',
-      cancelButtonText: 'Cancel'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.courseService.unenrollStudent(this.courseId, studentId).subscribe({
-          next: () => {
-            // Remove student from local list
-            this.students = this.students.filter(s => s.id !== studentId);
-            this.studentRemoved.emit();
-            Swal.fire('Success', 'Student removed successfully', 'success');
-          },
-          error: (err) => {
-            console.error('Error unenrolling student:', err);
-            Swal.fire('Error', 'Failed to remove student', 'error');
-          }
-        });
-      }
-    });
   }
 }

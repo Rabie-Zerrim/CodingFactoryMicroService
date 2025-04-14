@@ -1,13 +1,18 @@
 package tn.esprit.esponline.DAO.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.Data;
-import java.util.*;
+import lombok.*;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "courses")
 public class Course {
 
@@ -15,37 +20,49 @@ public class Course {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @NotNull @Size(min = 1, max = 100)
+    @NotBlank(message = "Title is required")
+    @Size(min = 1, max = 100, message = "Title must be between 1 and 100 characters")
     private String title;
 
-    @NotNull @Size(min = 1, max = 20)
+    @NotBlank(message = "Level is required")
+    @Size(min = 1, max = 20, message = "Level must be between 1 and 20 characters")
     private String level;
 
-    @NotNull @Size(min = 1, max = 500)
+    @NotBlank(message = "Description is required")
+    @Size(min = 1, max = 500, message = "Description must be between 1 and 500 characters")
     private String description;
 
-    private double rate;
+    @Min(0) @Max(5)
+    private double rate = 0; // Average rating of the course with default value
 
-    @NotNull
+    @NotBlank(message = "Image URL is required")
     private String image;
 
+    @NotNull(message = "Category is required")
     @Enumerated(EnumType.STRING)
-    @NotNull
     private CategoryEnum categoryCourse;
 
-    @Column(name = "trainer_id")
-    private Integer trainerId;
+    // Simplified trainer information (will be linked via Feign later)
+    private Long trainerId;
+    private String trainerName;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "course_students",
-            joinColumns = @JoinColumn(name = "course_id"),
-            foreignKey = @ForeignKey(name = "fk_course_students_course"))
-    @Column(name = "student_id")
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<CourseResource> resources;
+
+    private String qrCodeUrl; // URL to the generated QR code image
+
+    @ElementCollection
     private Set<Integer> studentIds = new HashSet<>();
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CourseResource> resources;
+    // Add getter and setter
+    public String getQrCodeUrl() {
+        return qrCodeUrl;
+    }
+
+    public void setQrCodeUrl(String qrCodeUrl) {
+        this.qrCodeUrl = qrCodeUrl;
+    }
 
     public int getId() {
         return id;
@@ -103,20 +120,20 @@ public class Course {
         this.categoryCourse = categoryCourse;
     }
 
-    public Integer getTrainerId() {
+    public Long getTrainerId() {
         return trainerId;
     }
 
-    public void setTrainerId(Integer trainerId) {
+    public void setTrainerId(Long trainerId) {
         this.trainerId = trainerId;
     }
 
-    public Set<Integer> getStudentIds() {
-        return studentIds;
+    public String getTrainerName() {
+        return trainerName;
     }
 
-    public void setStudentIds(Set<Integer> studentIds) {
-        this.studentIds = studentIds;
+    public void setTrainerName(String trainerName) {
+        this.trainerName = trainerName;
     }
 
     public List<CourseResource> getResources() {
@@ -125,5 +142,13 @@ public class Course {
 
     public void setResources(List<CourseResource> resources) {
         this.resources = resources;
+    }
+
+    public Set<Integer> getStudentIds() {
+        return studentIds;
+    }
+
+    public void setStudentIds(Set<Integer> studentIds) {
+        this.studentIds = studentIds;
     }
 }

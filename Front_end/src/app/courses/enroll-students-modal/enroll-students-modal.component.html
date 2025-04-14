@@ -2,7 +2,11 @@
   <div class="modal-content">
     <h3>Enroll Students in {{ selectedCourse?.title }}</h3>
 
-    <div class="student-list">
+    <div *ngIf="loading" class="loading-indicator">
+      Loading students...
+    </div>
+
+    <div *ngIf="!loading" class="student-list">
       <label>Available Students:</label>
       <select [(ngModel)]="selectedStudent" class="form-control">
         <option [ngValue]="null" disabled>Select a student</option>
@@ -13,11 +17,11 @@
     </div>
 
     <div class="modal-actions">
-      <button 
-        (click)="enrollSelectedStudent()" 
+      <button
+        (click)="enrollSelectedStudent()"
         class="btn btn-primary"
-        [disabled]="!selectedStudent">
-        Enroll Selected Student
+        [disabled]="!selectedStudent || loading">
+        {{ loading ? 'Enrolling...' : 'Enroll Selected Student' }}
       </button>
       <button (click)="closeModal()" class="btn btn-secondary">
         Close

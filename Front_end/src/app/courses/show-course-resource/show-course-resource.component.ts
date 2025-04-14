@@ -4,7 +4,6 @@ import { Course } from '../../models/courses';
 import { CourseResource } from '../../models/CourseResource';
 import { CourseResourceService } from '../../services/course-resource.service';
 import Swal from 'sweetalert2';
-import { StorageService } from 'app/shared/auth/storage.service';
 
 @Component({
   selector: 'app-show-course-resource',
@@ -20,8 +19,7 @@ export class ShowCourseResourceComponent implements OnChanges {
   expandedResource: CourseResource | null = null;
   resources: CourseResource[] = [];
   searchTerm: string = ''; // Added for search functionality
-// Change the isTrainer check to explicitly exclude admin
-public isTrainer = StorageService.isTrainerLoggedIn() && !StorageService.isAdminLoggedIn();
+
   constructor(
     private courseResourceService: CourseResourceService,
     private cdr: ChangeDetectorRef,

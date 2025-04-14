@@ -117,74 +117,74 @@ export class AddCourseModalComponent {
     if (!file) return;
 
     this.imageUploading = true;
-    
+
     try {
-        const formData = new FormData();
-        formData.append('file', file);
+      const formData = new FormData();
+      formData.append('file', file);
 
-        const token = StorageService.getToken();
-        if (!token) {
-            throw new Error('No authentication token found');
+      const token = StorageService.getToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const fileUrl = await this.http.post(
+        'http://localhost:8090/courses/upload',
+        formData,
+        {
+          responseType: 'text',
+          headers: new HttpHeaders({
+            'Authorization': `Bearer ${token}`
+            // Don't set Content-Type - let browser set it with boundary
+          })
         }
+      ).toPromise();
 
-        const fileUrl = await this.http.post(
-            'http://localhost:8090/courses/upload',
-            formData,
-            { 
-                responseType: 'text',
-                headers: new HttpHeaders({
-                    'Authorization': `Bearer ${token}`
-                    // Don't set Content-Type - let browser set it with boundary
-                })
-            }
-        ).toPromise();
-
-        if (fileUrl) {
-            this.newCourse.image = fileUrl;
-            this.imageError = null;
-            Swal.fire('Success!', 'File uploaded successfully!', 'success');
-        }
+      if (fileUrl) {
+        this.newCourse.image = fileUrl;
+        this.imageError = null;
+        Swal.fire('Success!', 'File uploaded successfully!', 'success');
+      }
     } catch (error: any) {
-        console.error('Error uploading file:', error);
-        const errorMsg = error.error?.message || error.message || 'Failed to upload image';
-        this.imageError = errorMsg;
-        Swal.fire('Error', errorMsg, 'error');
+      console.error('Error uploading file:', error);
+      const errorMsg = error.error?.message || error.message || 'Failed to upload image';
+      this.imageError = errorMsg;
+      Swal.fire('Error', errorMsg, 'error');
     } finally {
-        this.imageUploading = false;
+      this.imageUploading = false;
     }
-}
+  }
 
 // Update the addCourse method in AddCourseModalComponent
 // Update the addCourse method in AddCourseModalComponent
-addCourse(): void {
-  console.log('[Add Course] Starting add course process...');
-  
-  if (!this.validateForm()) {
-    console.log('[Add Course] Form validation failed');
-    return;
-  }
+  addCourse(): void {
+    console.log('[Add Course] Starting add course process...');
 
-  const user = this.storageService.getUser();
-  if (!user?.id) {
-    console.error('User ID not available');
-    Swal.fire('Error', 'User not authenticated', 'error');
-    return;
-  }
-
-  console.log('Adding course with trainer ID:', user.id);
-  this.newCourse.trainerId = user.id;
-
-  this.courseService.addCourse(this.newCourse,user.id).subscribe({
-    next: (course) => {
-      console.log('[Add Course] Successfully added course:', course);
-      this.courseAdded.emit(course);
-      this.closeModal();
-      Swal.fire('Success!', 'Course added successfully!', 'success');
-    },
-    error: (error) => {
-      console.error('[Add Course] Error:', error);
-      Swal.fire('Error', error.error?.message || 'Failed to add course', 'error');
+    if (!this.validateForm()) {
+      console.log('[Add Course] Form validation failed');
+      return;
     }
-  });
-}
+
+    const user = this.storageService.getUser();
+    if (!user?.id) {
+      console.error('User ID not available');
+      Swal.fire('Error', 'User not authenticated', 'error');
+      return;
+    }
+
+    console.log('Adding course with trainer ID:', user.id);
+    this.newCourse.trainerId = user.id;
+
+    this.courseService.addCourse(this.newCourse,user.id).subscribe({
+      next: (course) => {
+        console.log('[Add Course] Successfully added course:', course);
+        this.courseAdded.emit(course);
+        this.closeModal();
+        Swal.fire('Success!', 'Course added successfully!', 'success');
+      },
+      error: (error) => {
+        console.error('[Add Course] Error:', error);
+        Swal.fire('Error', error.error?.message || 'Failed to add course', 'error');
+      }
+    });
+  }
 }

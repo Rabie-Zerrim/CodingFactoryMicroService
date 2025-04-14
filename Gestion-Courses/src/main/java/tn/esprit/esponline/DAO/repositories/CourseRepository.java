@@ -9,23 +9,28 @@ import tn.esprit.esponline.DAO.entities.CategoryEnum;
 import tn.esprit.esponline.DAO.entities.Course;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface CourseRepository extends JpaRepository<Course, Integer> {
 
     @Query("SELECT c FROM Course c WHERE " +
-            "(:searchQuery IS NULL OR :searchQuery = '' OR " +
-            "LOWER(c.title) LIKE LOWER(CONCAT('%', :searchQuery, '%'))) AND " +
+            "(:searchQuery IS NULL OR LOWER(c.title) LIKE LOWER(CONCAT('%', :searchQuery, '%'))) AND " +
             "(:category IS NULL OR c.categoryCourse = :category)")
     Page<Course> searchCourses(
             @Param("searchQuery") String searchQuery,
             @Param("category") CategoryEnum category,
-            Pageable pageable);
+            Pageable pageable
+    );
+
+    Course findById(Long courseId);
+
+    List<Course> findByStudentIdsContaining(Integer studentId);
+
+    List<Course> findByTrainerId(Integer trainerId);
 
     @Query("SELECT c FROM Course c WHERE " +
-            "c.trainerId = :trainerId AND " +
-            "(:searchQuery IS NULL OR :searchQuery = '' OR " +
-            "LOWER(c.title) LIKE LOWER(CONCAT('%', :searchQuery, '%'))) AND " +
+            "(:trainerId IS NULL OR c.trainerId = :trainerId) AND " +
+            "(LOWER(c.title) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR " +
+            "LOWER(c.description) LIKE LOWER(CONCAT('%', :searchQuery, '%'))) AND " +
             "(:category IS NULL OR c.categoryCourse = :category)")
     Page<Course> findByTrainerIdAndSearch(
             @Param("trainerId") Integer trainerId,
@@ -35,8 +40,8 @@ public interface CourseRepository extends JpaRepository<Course, Integer> {
 
     @Query("SELECT c FROM Course c WHERE " +
             ":studentId MEMBER OF c.studentIds AND " +
-            "(:searchQuery IS NULL OR :searchQuery = '' OR " +
-            "LOWER(c.title) LIKE LOWER(CONCAT('%', :searchQuery, '%'))) AND " +
+            "(LOWER(c.title) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR " +
+            "LOWER(c.description) LIKE LOWER(CONCAT('%', :searchQuery, '%'))) AND " +
             "(:category IS NULL OR c.categoryCourse = :category)")
     Page<Course> findByStudentIdAndSearch(
             @Param("studentId") Integer studentId,
@@ -44,9 +49,17 @@ public interface CourseRepository extends JpaRepository<Course, Integer> {
             @Param("category") CategoryEnum category,
             Pageable pageable);
 
-    @Query("SELECT c FROM Course c WHERE c.trainerId = :trainerId")
-    List<Course> findByTrainerId(@Param("trainerId") Integer trainerId);
+    Page<Course> findByTrainerId(Integer trainerId, Pageable pageable);
 
-    List<Course> findByStudentIdsContaining(Integer studentId);
-    Optional<Course> findById(Long id);
+    Page<Course> findByTrainerIdAndCategoryCourse(Integer trainerId, CategoryEnum category, Pageable pageable);
+
+    Page<Course> findByTrainerIdAndTitleContainingIgnoreCase(Integer trainerId, String title, Pageable pageable);
+
+    Page<Course> findByTrainerIdAndTitleContainingIgnoreCaseAndCategoryCourse(
+            Integer trainerId, String title, CategoryEnum category, Pageable pageable);
+
+    @Query("SELECT DISTINCT c FROM Course c LEFT JOIN FETCH c.resources WHERE c.trainerId = :trainerId")
+    Page<Course> findByTrainerIdWithResources(@Param("trainerId") Integer trainerId, Pageable pageable);
+
+    Page<Course> findByStudentIdsContaining(Integer studentId, Pageable pageable);
 }

@@ -14,4 +14,6 @@ public interface IFileStorageService {
     String uploadVideo(MultipartFile file) throws IOException;
     void deleteDocument(String fileUrl);
     void deleteVideo(String fileUrl);
+
+    String uploadQRCode(byte[] qrCode, String s) throws IOException;
 }

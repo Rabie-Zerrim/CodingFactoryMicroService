@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { StorageService } from 'app/shared/auth/storage.service';
+import {catchError, tap} from 'rxjs/operators';
+import {StorageService} from '../shared/auth/storage.service';
 
 @Injectable({
   providedIn: 'root',
@@ -13,10 +13,37 @@ export class ReviewService {
   constructor(private http: HttpClient) {}
 
   addReview(review: any): Observable<any> {
-    return this.http.post(this.apiUrl, review);
+    return this.http.post(this.apiUrl, review).pipe(
+      catchError(error => {
+        // Convert the error to a consistent format
+        if (error.error && typeof error.error === 'object') {
+          throw error; // Already parsed error
+        } else if (typeof error.error === 'string') {
+          throw { ...error, error: { message: error.error } };
+        } else {
+          throw { ...error, error: { message: error.message || 'Unknown error' } };
+        }
+      })
+    );
   }
 
- // review.service.ts 
+  // Add this method
+  hasStudentReviewed(studentId: number, courseId: number): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/has-reviewed`, {
+      params: {
+        studentId: studentId.toString(),
+        courseId: courseId.toString()
+      },
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = StorageService.getToken();
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+  }
 
 getAIRecommendations(courseId: number): Observable<{ recommendations: string }> {
   console.log('Fetching AI recommendations for Course ID:', courseId);
@@ -28,22 +55,7 @@ getAIRecommendations(courseId: number): Observable<{ recommendations: string }> 
 
 
 }
-hasStudentReviewed(studentId: number, courseId: number): Observable<boolean> {
-  return this.http.get<boolean>(`${this.apiUrl}/has-reviewed`, {
-    params: {
-      studentId: studentId.toString(),
-      courseId: courseId.toString()
-    },
-    headers: this.getAuthHeaders()
-  });
-}
 
-private getAuthHeaders(): HttpHeaders {
-  const token = StorageService.getToken();
-  return new HttpHeaders({
-    'Authorization': `Bearer ${token}`
-  });
-}
 deleteRecommendation(courseId: number, recommendationText: string): Observable<void> {
   console.log("Calling deleteRecommendation API for Course ID:", courseId, "Text:", recommendationText); // Debugging
   return this.http.delete<void>(`${this.apiUrl}/courses/${courseId}/recommendations`, {

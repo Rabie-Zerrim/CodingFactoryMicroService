@@ -5,15 +5,16 @@
            class="search-input" (ngModelChange)="onSearchChange()">
     <select [(ngModel)]="selectedCategory" class="category-dropdown" (ngModelChange)="onSearchChange()">
       <option value="">All Categories</option>
-      <option *ngFor="let category of getCategoryValues()" [value]="category">
-        {{ getCategoryDisplayName(category) }}
+      <option *ngFor="let category of categoryEnum | keyvalue" [value]="category.value">
+        {{ category.value }}
       </option>
     </select>
     <div style="display: flex; align-items: center; gap: 10px;">
       <button class="clear-button" (click)="clearFilters()">Clear</button>
+
       <button *ngIf="isTrainerLoggedIn && !StorageService.isAdminLoggedIn()"
-        (click)="openAddCourseModal()"
-        class="add-course-button">
+              (click)="openAddCourseModal()"
+              class="floating-plus btn-floating">
         +
       </button>
     </div>
@@ -60,7 +61,7 @@
             <div class="card-body">
               <p><strong>Description:</strong> {{ course.description }}</p>
               <p><strong>Level:</strong> {{ course.level }}</p>
-              <p class="badge">{{ getCategoryDisplayName(course.categoryCourse) }}</p>
+              <p class="badge">{{ course.categoryCourse }}</p>
             </div>
             <!-- Rating Stars -->
             <div class="rating">
@@ -70,6 +71,8 @@
                 <i *ngFor="let star of getEmptyStars(course.rate)" class="bi bi-star star"></i>
               </div>
               <span class="rating-value">{{ course.rate | number:'1.1-1' }}</span>
+              <!-- In your course.component.html -->
+              <!-- course.component.html -->
               <button *ngIf="isStudentLoggedIn"
                       (click)="!course.hasReviewed && openReviewModal(course)"
                       class="add-review-button round"
@@ -121,81 +124,95 @@
                     class="btn-success round">
               <span class="icon">👥</span> Enroll Students
             </button>
+            <button (click)="openQRModal(course)" class="btn-info round">
+              <span class="icon">🔳</span> QR Code
+            </button>
 
-            <!-- Only show AI improvements to trainer -->
             <button *ngIf="isTrainerLoggedIn && !StorageService.isAdminLoggedIn()"
                     (click)="openAIImprovementsModal(course)"
                     class="btn-ai-improvements round">
               <span class="icon">🤖</span> AI Improvements
             </button>
-
-            <!-- Add these buttons inside your card-footer div -->
-            <button (click)="downloadPdf(course.id)" class="btn-info round">
-              <i class="fas fa-file-pdf"></i> Module File
-            </button>
-
-            <button (click)="downloadResourcesZip(course.id)"
-                    class="btn-info round"
-                    *ngIf="course.resources?.length > 0">
-              <i class="fas fa-file-archive"></i> Download Resources
-            </button>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Pagination Controls -->
+    <div class="pagination-controls">
+      <button (click)="prevPage()" [disabled]="page.number === 0">Previous</button>
+      <span>Page {{ page.number + 1 }} of {{ page.totalPages }}</span>
+      <button (click)="nextPage()" [disabled]="page.number >= page.totalPages - 1">Next</button>
+    </div>
+  </div>
+
+  <!-- Add Course Resource Modal -->
+  <app-add-course-resource
+    [showModal]="showAddResourceModal"
+    [selectedCourse]="selectedCourse"
+    (showModalChange)="showAddResourceModal = $event"
+    (resourceAdded)="onResourceAdded($event)">
+  </app-add-course-resource>
+
+  <!-- Show Course Resource Modal -->
+  <app-show-course-resource
+    [showModal]="showResourcesModal"
+    [selectedCourse]="selectedCourse"
+    (showModalChange)="showResourcesModal = $event"
+    (resourceAdded)="onResourceAdded($event)">
+  </app-show-course-resource>
+
+  <!-- Enroll Students Modal -->
+
+
+  <!-- View Students Modal -->
+  <app-show-students-modal
+    [showModal]="showStudentsModal"
+    [students]="enrolledStudents"
+    [courseId]="selectedCourse?.id"
+    (showModalChange)="showStudentsModal = $event">
+  </app-show-students-modal>
+  <!-- Add Review Modal -->
+  <app-review-modal
+    [showModal]="showReviewModal"
+    [selectedCourse]="selectedCourse"
+    (showModalChange)="showReviewModal = $event"
+    (reviewAdded)="onReviewAdded()">
+  </app-review-modal>
+
+  <!-- AI Improvements Modal -->
+  <app-ai-improvements-modal
+    [showModal]="showAIImprovementsModal"
+    [selectedCourse]="selectedCourse"
+    (showModalChange)="showAIImprovementsModal = $event">
+  </app-ai-improvements-modal>
+
+  <!-- Floating Plus Button -->
+  <app-enroll-students-modal
+    [showModal]="showEnrollModal"
+    [selectedCourse]="selectedCourse"
+    (showModalChange)="showEnrollModal = $event"
+    (studentsEnrolled)="onStudentsEnrolled()">
+  </app-enroll-students-modal>
+
+<<!-- QR Code Modal -->
+<div class="modal" [ngClass]="{'show': showQRModal}" *ngIf="showQRModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>QR Code for {{selectedCourse?.title}}</h3>
+      <button class="close-btn" (click)="closeQRModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="qr-code-container">
+        <img *ngIf="qrCodeImageUrl" [src]="qrCodeImageUrl" alt="Course QR Code" class="qr-code-image">
+        <div *ngIf="!qrCodeImageUrl" class="loading">Generating QR Code...</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" (click)="closeQRModal()">Close</button>
+      <a *ngIf="qrCodeImageUrl" [href]="qrCodeImageUrl" download="course-{{selectedCourse?.id}}-qrcode.png" class="btn btn-secondary">
+        Download QR Code
+      </a>
+    </div>
   </div>
 </div>
-
-<!-- Move this outside the course cards container -->
-<div class="pagination-controls" *ngIf="page.totalPages > 1">
-  <button (click)="prevPage()" [disabled]="page.number === 0">Previous</button>
-  <span>Page {{ page.number + 1 }} of {{ page.totalPages }}</span>
-  <button (click)="nextPage()" [disabled]="page.number >= page.totalPages - 1">Next</button>
-</div>
-
-<!-- Add Course Resource Modal -->
-<app-add-course-resource
-  [showModal]="showAddResourceModal"
-  [selectedCourse]="selectedCourse"
-  (showModalChange)="showAddResourceModal = $event"
-  (resourceAdded)="onResourceAdded($event)">
-</app-add-course-resource>
-
-<!-- Show Course Resource Modal -->
-<app-show-course-resource
-  [showModal]="showResourcesModal"
-  [selectedCourse]="selectedCourse"
-  (showModalChange)="showResourcesModal = $event"
-  (resourceAdded)="onResourceAdded($event)">
-</app-show-course-resource>
-
-<!-- Enroll Students Modal -->
-<app-enroll-students-modal
-  [showModal]="showEnrollModal"
-  [selectedCourse]="selectedCourse"
-  (showModalChange)="showEnrollModal = $event"
-  (studentsEnrolled)="onStudentsEnrolled()">
-</app-enroll-students-modal>
-
-<!-- View Students Modal -->
-<app-show-students-modal
-  [showModal]="showStudentsModal"
-  [students]="enrolledStudents"
-  [courseId]="selectedCourse?.id"
-  (showModalChange)="showStudentsModal = $event">
-</app-show-students-modal>
-
-<!-- Add Review Modal -->
-<app-review-modal
-  [showModal]="showReviewModal"
-  [selectedCourse]="selectedCourse"
-  (showModalChange)="showReviewModal = $event"
-  (reviewAdded)="onReviewAdded()">
-</app-review-modal>
-
-<!-- AI Improvements Modal -->
-<app-ai-improvements-modal
-  [showModal]="showAIImprovementsModal"
-  [selectedCourse]="selectedCourse"
-  (showModalChange)="showAIImprovementsModal = $event">
-</app-ai-improvements-modal>

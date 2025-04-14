@@ -8,6 +8,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="PartnershipManagement" />
+        <module name="config-server" />
         <module name="Gestion-PFE" />
         <module name="EEureka" />
         <module name="ApiGetway" />
@@ -51,6 +52,9 @@
       <module name="Gestion-PFE" options="-parameters" />
       <module name="PartnershipManagement" options="-parameters" />
       <module name="authservice" options="-parameters -parameters" />
+     
+      <module name="config-server" options="-parameters" />
+      
       <module name="esponline" options="-parameters" />
       <module name="reviews" options="-parameters" />
     </option>
