@@ -88,6 +88,44 @@ async function handleReviewsRoutes(req, res) {
             return;
         }
     }
+    if (method === 'GET' && parsedUrl.pathname === '/reviews/has-reviewed') {
+        const { studentId, courseId } = parsedUrl.query;
+
+        try {
+            const hasReviewed = await reviewService.hasStudentReviewedCourse(parseInt(studentId), parseInt(courseId));
+            res.writeHead(200);
+            res.end(JSON.stringify({ hasReviewed }));
+            return;
+        } catch (error) {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: 'Error checking review status' }));
+            return;
+        }
+    }
+
+    // GET /reviews/has-reviewed?studentId=...&courseId=...
+    if (method === 'GET' && parsedUrl.pathname === '/reviews/has-reviewed') {
+        const { studentId, courseId } = parsedUrl.query;
+
+        try {
+            const { Review } = require('../models').getModels();
+            const existingReview = await Review.findOne({
+                where: {
+                    studentId: parseInt(studentId),
+                    courseId: parseInt(courseId)
+                }
+            });
+
+            const hasReviewed = !!existingReview;
+            res.writeHead(200);
+            res.end(JSON.stringify({ hasReviewed }));
+            return;
+        } catch (error) {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: 'Error checking review status' }));
+            return;
+        }
+    }
 
     // Not found
     res.writeHead(404);

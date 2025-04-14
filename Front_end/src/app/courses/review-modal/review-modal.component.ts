@@ -1,15 +1,16 @@
 // review-modal.component.ts
-import { Component, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectorRef, OnChanges } from '@angular/core';
 import { ReviewService } from '../../services/review';
 import { StorageService } from 'app/shared/auth/storage.service';
 import Swal from 'sweetalert2';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-review-modal',
   templateUrl: './review-modal.component.html',
   styleUrls: ['./review-modal.component.scss']
 })
-export class ReviewModalComponent {
+export class ReviewModalComponent implements OnChanges {
   @Input() showModal: boolean = false;
   @Input() selectedCourse: any;
   @Output() showModalChange = new EventEmitter<boolean>();
@@ -22,34 +23,65 @@ export class ReviewModalComponent {
   };
   hasReviewed = false;
   loading = false;
+  checkingReview = false;
 
   constructor(
     private reviewService: ReviewService,
     private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit(): void {
-    this.review.studentId = StorageService.getUserId();
-    this.checkIfReviewed();
-  }
-
-  checkIfReviewed(): void {
-    if (this.selectedCourse && this.review.studentId) {
-      this.reviewService.hasStudentReviewed(this.review.studentId, this.selectedCourse.id)
-        .subscribe(hasReviewed => {
-          this.hasReviewed = hasReviewed;
-          this.cdr.detectChanges();
-        });
+  ngOnChanges(): void {
+    if (this.showModal) {
+      this.resetForm();
+      this.review.studentId = StorageService.getUserId();
+      this.checkIfReviewed();
     }
   }
 
+  resetForm(): void {
+    this.review = {
+      studentId: 0,
+      rating: 1,
+      comment: ''
+    };
+    this.hasReviewed = false;
+    this.loading = false;
+    this.checkingReview = false;
+  }
+
+  checkIfReviewed(): void {
+    if (!this.selectedCourse || !this.review.studentId) return;
+
+    this.checkingReview = true;
+    this.reviewService.hasStudentReviewed(this.review.studentId, this.selectedCourse.id)
+      .subscribe({
+        next: (hasReviewed) => {
+          this.hasReviewed = hasReviewed;
+          this.checkingReview = false;
+          this.cdr.detectChanges();
+
+          if (hasReviewed) {
+            Swal.fire('Info', 'You have already reviewed this course.', 'info');
+            this.closeModal();
+          }
+        },
+        error: (err) => {
+          console.error('Error checking review:', err);
+          this.hasReviewed = false;
+          this.checkingReview = false;
+          this.cdr.detectChanges();
+        }
+      });
+  }
+
   setRating(rating: number): void {
-    this.review.rating = rating;
+    if (!this.hasReviewed) {
+      this.review.rating = rating;
+    }
   }
 
   submitReview(): void {
-    if (this.hasReviewed) {
-      Swal.fire('Error', 'You have already reviewed this course', 'error');
+    if (this.hasReviewed || !this.selectedCourse) {
       return;
     }
 
@@ -72,23 +104,18 @@ export class ReviewModalComponent {
       },
       error: (error) => {
         this.loading = false;
-        console.error('Review submission error:', error);
-
-        // Handle 409 Conflict (already reviewed)
         if (error.status === 409) {
           this.hasReviewed = true;
-          Swal.fire('Info', 'You have already reviewed this course', 'info');
+          Swal.fire('Info', 'You have already reviewed this course.', 'info');
           this.closeModal();
-          return;
+        } else {
+          const errorMessage = error.error?.message || 'Failed to submit review';
+          Swal.fire('Error', errorMessage, 'error');
         }
-
-        // Handle other errors
-        const errorMessage = error.error?.message ||
-          (typeof error.error === 'string' ? error.error : 'Failed to submit review');
-        Swal.fire('Error', errorMessage, 'error');
       }
     });
   }
+
   closeModal(): void {
     this.showModal = false;
     this.showModalChange.emit(false);

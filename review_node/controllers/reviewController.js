@@ -2,12 +2,18 @@ const reviewService = require('../services/reviewService');
 
 exports.addReview = async (req, res) => {
     try {
-        const review = await reviewService.addReview(req.body);
-        res.status(201).json(review);
+        const result = await reviewService.addReview(req.body);
+
+        if (result?.message) {
+            return res.status(200).json({ message: result.message });
+        }
+
+        res.status(201).json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 exports.getReviewsByCourseId = async (req, res) => {
     try {

@@ -111,12 +111,7 @@
               <span class="icon">✏️</span> Edit
             </button>
 
-            <!-- Show students modal to admin or trainer -->
-            <button *ngIf="isTrainerLoggedIn || StorageService.isAdminLoggedIn()"
-                    (click)="openStudentsModal(course)"
-                    class="btn-info round">
-              <span class="icon">👥</span> View Students
-            </button>
+
 
             <!-- Show enroll to admin or trainer -->
             <button *ngIf="isTrainerLoggedIn || StorageService.isAdminLoggedIn()"
