@@ -21,7 +21,9 @@ export class CourseService {
 
   constructor(private http: HttpClient) {}
 
-
+  getAllCourses(): Observable<Course[]> {
+    return this.http.get<Course[]>(this.apiUrl, { headers: this.getAuthHeaders() });
+  }
 // In your course.service.ts
   addCourse(course: Course, trainerId: number): Observable<Course> {
     return this.http.post<Course>(

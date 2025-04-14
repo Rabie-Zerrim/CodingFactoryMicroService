@@ -14,5 +14,6 @@ export class Course {
   resources!: CourseResource[];
   qrCodeUrl!: string;
   hasReviewed?: boolean; // Made optional
+  studentIds?: number[];
 }
 
