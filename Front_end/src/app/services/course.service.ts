@@ -229,13 +229,21 @@ export class CourseService {
       `${this.apiUrl}/reviews/has-reviewed/${studentId}/${courseId}`
     );
   }
-
-  searchMyCourses(
+  searchAllCourses(
     searchQuery: string = '',
-    category: string = '',
-    page: number = 0,
-    size: number = 6
-  ): Observable<Page<Course>> {
+    category: string = ''
+  ): Observable<Course[]> {
+    let params = new HttpParams();
+    if (searchQuery) params = params.set('searchQuery', searchQuery);
+    if (category) params = params.set('category', category);
+
+    return this.http.get<Course[]>(`${this.apiUrl}/search-all`, { params });
+  }
+
+  searchAllMyCourses(
+    searchQuery: string = '',
+    category: string = ''
+  ): Observable<Course[]> {
     const user = StorageService.getUser();
     if (!user) {
       return throwError(() => new Error('User not authenticated'));
@@ -245,15 +253,13 @@ export class CourseService {
     userRole = userRole.replace(/[\[\]]/g, '').toUpperCase();
 
     let params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString())
       .set('userId', user.id.toString())
       .set('userRole', userRole);
 
     if (searchQuery) params = params.set('searchQuery', searchQuery);
     if (category) params = params.set('category', category);
 
-    return this.http.get<Page<Course>>(`${this.apiUrl}/my-courses/search`, {
+    return this.http.get<Course[]>(`${this.apiUrl}/my-courses/search-all`, {
       params,
       headers: this.getAuthHeaders()
     });

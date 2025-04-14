@@ -330,51 +330,48 @@ public class CourseRestController {
         }
     }
 
-    @GetMapping("/my-courses/search")
-    public ResponseEntity<Page<Course>> searchMyCourses(
+    @GetMapping("/search-all")
+    public ResponseEntity<List<Course>> searchAllCourses(
+            @RequestParam(required = false) String searchQuery,
+            @RequestParam(required = false) CategoryEnum category) {
+        List<Course> courses = courseService.searchAllCourses(searchQuery, category);
+        return ResponseEntity.ok(courses);
+    }
+
+    @GetMapping("/my-courses/search-all")
+    public ResponseEntity<List<Course>> searchAllMyCourses(
             @RequestParam(required = false) String searchQuery,
             @RequestParam(required = false) String category,
             @RequestParam Integer userId,
-            @RequestParam String userRole,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "6") int size) {
+            @RequestParam String userRole) {
 
-        try {
-            String normalizedRole = userRole.replaceAll("[\\[\\]]", "");
-            CategoryEnum categoryEnum = null;
+        String normalizedRole = userRole.replaceAll("[\\[\\]]", "");
+        CategoryEnum categoryEnum = null;
 
-            if (category != null && !category.isEmpty()) {
-                try {
-                    categoryEnum = CategoryEnum.valueOf(category.toUpperCase());
-                } catch (IllegalArgumentException e) {
-                    return ResponseEntity.badRequest().build();
-                }
-            }
-
-            Page<Course> courses;
-            if ("TRAINER".equalsIgnoreCase(normalizedRole)) {
-                courses = courseService.searchCoursesByTrainer(searchQuery, categoryEnum, userId, page, size);
-            } else if ("STUDENT".equalsIgnoreCase(normalizedRole)) {
-                courses = courseService.searchCoursesByStudent(searchQuery, categoryEnum, userId, page, size);
-            } else {
+        if (category != null && !category.isEmpty()) {
+            try {
+                categoryEnum = CategoryEnum.valueOf(category.toUpperCase());
+            } catch (IllegalArgumentException e) {
                 return ResponseEntity.badRequest().build();
             }
-
-            return ResponseEntity.ok(courses);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
         }
-    }
-    @GetMapping("/search")
-    public ResponseEntity<Page<Course>> searchCourses(
-            @RequestParam(required = false) String searchQuery,
-            @RequestParam(required = false) CategoryEnum category,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "6") int size
-    ) {
-        Page<Course> courses = courseService.searchCourses(searchQuery, category, page, size);
+
+        List<Course> courses;
+        if ("TRAINER".equalsIgnoreCase(normalizedRole)) {
+            courses = courseService.searchAllCoursesByTrainer(searchQuery, categoryEnum, userId);
+        } else if ("STUDENT".equalsIgnoreCase(normalizedRole)) {
+            courses = courseService.searchAllCoursesByStudent(searchQuery, categoryEnum, userId);
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+
         return ResponseEntity.ok(courses);
     }
+
+
+
+
+
 
     // In your Spring controller
     @GetMapping("/{id}")

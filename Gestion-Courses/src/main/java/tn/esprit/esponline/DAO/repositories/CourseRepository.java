@@ -15,11 +15,30 @@ public interface CourseRepository extends JpaRepository<Course, Integer> {
     @Query("SELECT c FROM Course c WHERE " +
             "(:searchQuery IS NULL OR LOWER(c.title) LIKE LOWER(CONCAT('%', :searchQuery, '%'))) AND " +
             "(:category IS NULL OR c.categoryCourse = :category)")
-    Page<Course> searchCourses(
+    List<Course> searchAllCourses(
             @Param("searchQuery") String searchQuery,
-            @Param("category") CategoryEnum category,
-            Pageable pageable
+            @Param("category") CategoryEnum category
     );
+
+    @Query("SELECT c FROM Course c WHERE " +
+            "(:trainerId IS NULL OR c.trainerId = :trainerId) AND " +
+            "(LOWER(c.title) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR " +
+            "LOWER(c.description) LIKE LOWER(CONCAT('%', :searchQuery, '%'))) AND " +
+            "(:category IS NULL OR c.categoryCourse = :category)")
+    List<Course> findByTrainerIdAndSearchAll(
+            @Param("trainerId") Integer trainerId,
+            @Param("searchQuery") String searchQuery,
+            @Param("category") CategoryEnum category);
+
+    @Query("SELECT c FROM Course c WHERE " +
+            ":studentId MEMBER OF c.studentIds AND " +
+            "(LOWER(c.title) LIKE LOWER(CONCAT('%', :searchQuery, '%')) OR " +
+            "LOWER(c.description) LIKE LOWER(CONCAT('%', :searchQuery, '%'))) AND " +
+            "(:category IS NULL OR c.categoryCourse = :category)")
+    List<Course> findByStudentIdAndSearchAll(
+            @Param("studentId") Integer studentId,
+            @Param("searchQuery") String searchQuery,
+            @Param("category") CategoryEnum category);
 
     Course findById(Long courseId);
 

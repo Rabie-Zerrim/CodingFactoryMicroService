@@ -35,34 +35,32 @@ public class CourseService implements ICourseService {
         return courseRepository.save(course);
     }
 
-    @Override
-    public Page<Course> searchCoursesByTrainer(String searchQuery, CategoryEnum category, Integer trainerId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("title").ascending());
-        return courseRepository.findByTrainerIdWithResources(trainerId, pageable);
-    }
+
 
     @Override
-    public Page<Course> searchCoursesByStudent(String searchQuery, CategoryEnum category, Integer studentId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("title").ascending());
-
-        // If no filters, return all enrolled courses
-        if ((searchQuery == null || searchQuery.isEmpty()) && category == null) {
-            return courseRepository.findByStudentIdsContaining(studentId, pageable);
-        }
-
-        // If filters exist, apply them
-        return courseRepository.findByStudentIdAndSearch(
-                studentId,
+    public List<Course> searchAllCourses(String searchQuery, CategoryEnum category) {
+        return courseRepository.searchAllCourses(
                 searchQuery != null ? searchQuery : "",
-                category,
-                pageable
+                category
         );
     }
 
     @Override
-    public Page<Course> searchCourses(String searchQuery, CategoryEnum category, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("title").ascending());
-        return courseRepository.searchCourses(searchQuery, category, pageable);
+    public List<Course> searchAllCoursesByTrainer(String searchQuery, CategoryEnum category, Integer trainerId) {
+        return courseRepository.findByTrainerIdAndSearchAll(
+                trainerId,
+                searchQuery != null ? searchQuery : "",
+                category
+        );
+    }
+
+    @Override
+    public List<Course> searchAllCoursesByStudent(String searchQuery, CategoryEnum category, Integer studentId) {
+        return courseRepository.findByStudentIdAndSearchAll(
+                studentId,
+                searchQuery != null ? searchQuery : "",
+                category
+        );
     }
 
     @Override
