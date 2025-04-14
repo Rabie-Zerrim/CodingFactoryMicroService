@@ -1,6 +1,7 @@
 package tn.esprit.esponline.Services;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -13,20 +14,21 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.UUID;
 
+@RefreshScope  // Add this if you want refresh capabilities
 @Service
 public class FileStorageService implements IFileStorageService {
 
-    @Value("${supabase.url}")
+    @Value("${supabase.url:https://default.supabase.co}")
     private String supabaseUrl;
 
-    @Value("${supabase.key}")
+    @Value("${supabase.key:default-key}")
     private String supabaseKey;
 
-    @Value("${supabase.bucket.images}")
-    private String imagesBucket = "course-images"; // Default value
+    @Value("${supabase.bucket.images:course-images}")
+    private String imagesBucket;
 
-    @Value("${supabase.bucket.resources}")
-    private String resourcesBucket = "course-resources"; // Default value
+    @Value("${supabase.bucket.resources:course-resources}")
+    private String resourcesBucket;
 
     private final RestTemplate restTemplate = new RestTemplate();
 

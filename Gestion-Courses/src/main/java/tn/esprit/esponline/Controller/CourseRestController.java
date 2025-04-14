@@ -6,13 +6,20 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.AbstractEnvironment;
+import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.core.env.PropertySource;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.esponline.DAO.entities.CategoryEnum;
 import tn.esprit.esponline.DAO.entities.Course;
@@ -28,6 +35,7 @@ import java.util.stream.Collectors;
 
 @Tag(name = "Courses", description = "This web service handles CRUD operations for courses.")
 @RestController
+@RefreshScope
 @RequestMapping("/courses")
 public class CourseRestController {
 
@@ -44,6 +52,14 @@ public class CourseRestController {
     private QRCodeService qrCodeService;
     @Autowired
     private AuthServiceClient authServiceClient;
+
+    @Value("${welcome.message}")
+    private String welcomeMessage;
+
+    @GetMapping("/welcome")
+    public String welcome() {
+        return welcomeMessage;
+    }
 
     @Operation(summary = "Retrieve all courses", description = "This endpoint retrieves all courses from the database.")
     @ApiResponses(value = {

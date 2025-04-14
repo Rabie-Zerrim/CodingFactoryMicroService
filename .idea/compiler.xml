@@ -7,6 +7,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="config-server" />
         <module name="Gestion-PFE" />
         <module name="EEureka" />
         <module name="ApiGetway" />
@@ -31,6 +32,9 @@
         <module name="authservice" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="demoConfigServer" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
@@ -38,6 +42,8 @@
       <module name="EEureka" options="-parameters" />
       <module name="Gestion-PFE" options="-parameters" />
       <module name="authservice" options="-parameters -parameters" />
+      <module name="config-server" options="-parameters" />
+      <module name="demoConfigServer" options="-parameters" />
       <module name="esponline" options="-parameters" />
       <module name="reviews" options="-parameters" />
     </option>
