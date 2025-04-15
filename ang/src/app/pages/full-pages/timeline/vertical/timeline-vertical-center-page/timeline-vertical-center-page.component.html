@@ -1,0 +1,39 @@
+<h2 class="text-center py-4 display-5 fw-bold">Partnership Timeline</h2>
+
+<section class="timeline-container container py-5" style="position: relative;">
+  <!-- Timeline Line -->
+  <div class="timeline-line" 
+       style="position: absolute; top: 0; left: 50%; width: 4px; height: 100%; background-color: #e0e0e0; transform: translateX(-50%);"></div>
+
+  <!-- Timeline Badge (Today) -->
+  <div class="timeline-badge-center" style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); margin-top: 20px;">
+    <span class="badge bg-primary">Today</span>
+  </div>
+
+  <!-- Loop partnerships with index to alternate -->
+  <div
+    *ngFor="let partnership of partnerships; let i = index"
+    class="timeline-item row mb-5"
+    [ngClass]="{ 'flex-row-reverse': i % 2 !== 0 }"
+    style="position: relative; width: 100%; display: flex; justify-content: space-between; margin-top: 50px;"
+  >
+    <!-- Left side: Content -->
+    <div class="col-md-6 col-12 d-flex align-items-center" style="position: relative;">
+      <div class="card-body border p-4" style="border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+        <h4 class="card-title mb-3 text-primary fw-bold">{{ partnership.proposals?.proposalName }}</h4>
+        <small class="text-muted d-block mb-2">{{ partnership.createdAt | date: 'medium' }}</small>
+        <p class="card-text mt-3 mb-1 text-dark">{{ partnership.proposals?.proposalDescription }}</p>
+        <p class="mb-2">
+          <strong>Status:</strong>
+          <span class="text-capitalize text-success">{{ partnership.proposals?.proposalStatus }}</span>
+        </p>
+        <button
+          (click)="bookMeeting(partnership.proposals?.idProposal)"
+          class="btn btn-outline-primary mt-2"
+        >
+          Book Meeting
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

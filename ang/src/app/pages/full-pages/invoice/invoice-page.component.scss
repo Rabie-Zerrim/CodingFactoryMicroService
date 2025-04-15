@@ -1,0 +1,20 @@
+@media print {
+    body {
+      font-family: Arial, sans-serif !important;
+      margin: 0 !important;
+      padding: 20px !important;
+    }
+    .card {
+      margin: 0 !important;
+      padding: 10px !important;
+      box-shadow: none !important;
+    }
+    .btn {
+      display: none !important;
+    }
+    #invoice-template {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+  }
+  

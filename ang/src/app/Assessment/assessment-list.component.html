@@ -1,0 +1,27 @@
+<!-- assessment-list.component.html -->
+<div *ngIf="errorMessage" class="error-message">
+    <p>{{ errorMessage }}</p>
+  </div>
+  
+  <!-- Create assessment form -->
+  <form (ngSubmit)="createAssessment()">
+    <div>
+      <label for="partnershipId">Partnership ID</label>
+      <select [(ngModel)]="selectedPartnershipId" name="partnershipId" required>
+        <option value="0" disabled>Select a partnership</option>
+        <option *ngFor="let partnership of partnerships" [value]="partnership.id">
+          {{ partnership.name }}
+        </option>
+      </select>
+    </div>
+  
+    <button type="submit" [disabled]="!selectedPartnershipId">Create Assessment</button>
+  </form>
+  
+  <!-- List of assessments -->
+  <ul>
+    <li *ngFor="let assessment of assessments">
+      <p>{{ assessment.feedback }} - {{ assessment.score }}</p>
+    </li>
+  </ul>
+  

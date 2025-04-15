@@ -1,0 +1,42 @@
+<form (ngSubmit)="createAssessment()">
+    <div>
+      <label for="partnershipId">Partnership</label>
+      <select [(ngModel)]="assessment.partnershipId" name="partnershipId" required>
+        <option value="0" disabled>Select a partnership</option>
+        <option *ngFor="let partnership of partnerships" [value]="partnership.idPartnership">
+          {{ partnership.partnershipStatus }}
+        </option>
+      </select>
+    </div>
+  
+    <div>
+      <label for="score">Score</label>
+      <input
+        type="number"
+        id="score"
+        [(ngModel)]="assessment.score"
+        name="score"
+        placeholder="Enter Score"
+        required
+      />
+    </div>
+  
+    <div>
+      <label for="feedback">Feedback</label>
+      <textarea
+        id="feedback"
+        [(ngModel)]="assessment.feedback"
+        name="feedback"
+        placeholder="Enter Feedback"
+      ></textarea>
+    </div>
+  
+    <button type="submit" [disabled]="!assessment.partnershipId || !assessment.score">
+      Create Assessment
+    </button>
+  
+    <div *ngIf="errorMessage" class="error-message">
+      <p>{{ errorMessage }}</p>
+    </div>
+  </form>
+  

@@ -1,0 +1,87 @@
+.timeline-container {
+    position: relative;
+  }
+  
+  .timeline-line {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 4px;
+    height: 100%;
+    background-color: #e0e0e0;
+    transform: translateX(-50%);
+  }
+  
+  .timeline-badge-center {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 20px;
+  }
+  
+  .timeline-item {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 50px;
+  }
+  
+  .timeline-item .col-md-6 {
+    padding: 0 20px;
+  }
+  
+  .timeline-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+  }
+  
+  .timeline-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+  
+  .card-body {
+    padding: 20px;
+  }
+  
+  .card-body h4 {
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
+  
+  .card-body p {
+    font-size: 1rem;
+  }
+  
+  .card-body small {
+    font-size: 0.875rem;
+  }
+  
+  .card-body button {
+    width: 100%;
+    font-size: 1rem;
+    padding: 10px;
+  }
+  
+  .flex-row-reverse {
+    flex-direction: row-reverse;
+  }
+  
+  .text-primary {
+    color: #007bff !important;
+  }
+  
+  .text-muted {
+    color: #6c757d;
+  }
+  
+  .text-success {
+    color: #28a745 !important;
+  }
+  
+  .btn-outline-primary {
+    border-color: #007bff;
+    color: #007bff;
+  }
+  

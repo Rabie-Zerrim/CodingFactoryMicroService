@@ -1,0 +1,33 @@
+<!-- Line Chart Starts -->
+<div class="row">
+    <div class="col-12">
+        <div class="content-header">ChartJS</div>
+    </div>
+  </div>
+  <div class="row text-left">
+      <div class="col-sm-12">
+          <div class="card">
+              <div class="card-header">
+                  <h4 class="card-title">Line Chart</h4>
+              </div>
+              <div class="card-content">
+                  <div class="card-body">
+                      <div class="height-400">
+                          <canvas height="400" baseChart class="chart"
+                              [datasets]="lineChartData"
+                              [labels]="lineChartLabels"
+                              [options]="lineChartOptions"
+                              [colors]="lineChartColors"
+                              [legend]="lineChartLegend"
+                              [chartType]="lineChartType"
+                              (chartHover)="chartHovered($event)"
+                              (chartClick)="chartClicked($event)">
+                          </canvas>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+  <!-- Line Chart Ends -->
+  

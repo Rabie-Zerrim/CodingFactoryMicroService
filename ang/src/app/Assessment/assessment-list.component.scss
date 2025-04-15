@@ -1,0 +1,69 @@
+.assessment-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+  
+    th {
+      background-color: #f0f0f0;
+    }
+  }
+  
+  .status-form {
+    background-color: #f9f9f9;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  
+    label {
+      font-weight: bold;
+    }
+  
+    .form-control {
+      width: 100%;
+      padding: 8px;
+    }
+  }
+  
+  .button-group {
+    display: flex;
+    gap: 10px;
+  
+    .btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  
+    .admin {
+      background-color: #007bff;
+      color: white;
+    }
+  
+    .partner {
+      background-color: #28a745;
+      color: white;
+    }
+  
+    .cancel {
+      background-color: #dc3545;
+      color: white;
+    }
+  
+    .action {
+      background-color: #6c757d;
+      color: white;
+    }
+  }
+  

@@ -1,0 +1,80 @@
+<section class="invoice-template">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-content p-3">
+          <div id="invoice-template" class="card-body pb-0">
+            
+            <!-- Invoice Company Details -->
+            <div id="invoice-company-details" class="row">
+              <div class="col-md-6 col-12">
+                <div class="media">
+                  <img src="assets/img/logos/logo-color-big.png" alt="company logo" width="80" height="80">
+                  <div class="media-body ml-4">
+                    <ul class="m-0 list-unstyled">
+                      <li class="text-bold-800">Coding Factory</li>
+                      <li>4025 Oak Avenue, Melbourne,</li>
+                      <li>Florida 32940, USA</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-12 text-right">
+                <h2 class="primary text-uppercase">Invoice</h2>
+                <p class="pb-3"># INV-001001</p>
+                <ul class="px-0 list-unstyled">
+                  <li>Balance Due</li>
+                  <!-- Updated balance to reflect proposal amount -->
+                  <li class="font-medium-2 text-bold-700">
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Partnership Details -->
+            <div *ngIf="selectedPartnership" class="partnership-details mt-3">
+              <h5>Partnership Details</h5>
+              <p><strong>ID:</strong> {{ selectedPartnership.idPartnership }}</p>
+              <p><strong>Status:</strong> {{ selectedPartnership.partnershipStatus }}</p>
+              <p><strong>Entreprise:</strong> {{ selectedPartnership.entreprise?.nameEntreprise }}</p>
+
+              <div *ngIf="selectedPartnership.proposals">
+                <h6>Proposal Details</h6>
+                <p><strong>Proposal ID:</strong> {{ selectedPartnership.proposals?.idProposal }}</p>
+                <p><strong>Start Date:</strong> {{ selectedPartnership.proposals?.startDate | date:'short' }}</p>
+                <p><strong>End Date:</strong> {{ selectedPartnership.proposals?.endDate | date:'short' }}</p>
+                <p><strong>Planned Amount:</strong> ${{ selectedPartnership.proposals?.plannedAmount | number:'1.2-2' }}</p>
+              </div>
+            </div>
+
+            <!-- Invoice Footer -->
+            <div id="invoice-footer" class="mt-3">
+              <div class="row mt-2 mt-sm-0">
+                <div class="col-md-6 col-12 d-flex align-items-center">
+                  <div class="terms-conditions mb-2">
+                    <h6>Terms & Condition</h6>
+                    <p>You know, being a test pilot isn't always the healthiest business in the world. We predict too much for the next year and yet far too little for the next 10.</p>
+                  </div>
+                </div>
+                <div class="col-md-6 col-12">
+                  <div class="signature text-center">
+                    <p>Authorized person</p>
+                    <img src="assets/img/pages/signature-scan.png" alt="signature" width="250">
+                    <h6 class="mt-4">Amanda Orton</h6>
+                    <p class="text-muted">Managing Director</p>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-12 text-center text-sm-right">
+<!-- Print Invoice Button -->
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
