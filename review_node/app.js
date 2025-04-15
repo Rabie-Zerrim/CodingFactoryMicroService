@@ -52,12 +52,23 @@ async function startServer() {
             res.end(JSON.stringify({ message: 'Route not found' }));
         });
 
-        server.listen(PORT, () => {
+        server.listen(PORT, async () => {
             console.log(`Server running on port ${PORT}`);
-            eurekaClient.start(error => {
-                if (error) console.error('Eureka registration failed:', error);
-                else console.log('Registered with Eureka');
-            });
+            try {
+                await new Promise((resolve, reject) => {
+                    eurekaClient.start(error => {
+                        if (error) {
+                            console.error('Eureka registration failed:', error);
+                            reject(error);
+                        } else {
+                            console.log('Registered with Eureka');
+                            resolve();
+                        }
+                    });
+                });
+            } catch (e) {
+                console.error('Eureka registration error:', e);
+            }
         });
 
         // Graceful shutdown

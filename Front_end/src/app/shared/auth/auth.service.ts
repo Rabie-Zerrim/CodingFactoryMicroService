@@ -10,7 +10,7 @@ export const AUTH_HEADER = 'Authorization';
 @Injectable()
 export class AuthService {
   storageService: StorageService;
-  
+
   constructor(private http: HttpClient, private storage: StorageService) {}
 
   // Register method
@@ -40,7 +40,7 @@ export class AuthService {
     tap((res: HttpResponse<any>) => {
       const token = res.headers.get('Authorization')?.replace('Bearer ', '');
       const body = res.body;
-      
+
       if (token && body) {
         this.storage.saveToken(token);
         this.storage.saveUser({

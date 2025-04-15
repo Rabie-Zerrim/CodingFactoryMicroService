@@ -14,7 +14,13 @@ COPY . .
 # Set environment variables
 ENV PORT=8082
 ENV NODE_ENV=production
-ENV EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+ENV DB_HOST=mysql
+ENV DB_USER=root
+ENV DB_PASSWORD=rootpassword
+ENV DB_NAME=reviews_db
+ENV EUREKA_HOST=eureka-server
+ENV EUREKA_PORT=8761
+ENV HOSTNAME=reviews-service
 
 # Expose the application port
 EXPOSE 8082

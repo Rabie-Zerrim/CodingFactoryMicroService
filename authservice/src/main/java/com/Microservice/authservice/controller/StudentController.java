@@ -3,6 +3,7 @@ package com.Microservice.authservice.controller;
 import com.Microservice.authservice.entities.Role;
 import com.Microservice.authservice.entities.User;
 import com.Microservice.authservice.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +17,12 @@ import java.util.stream.Collectors;
 
 public class StudentController {
 
+    @Value("${welcome.message}")
+    private String welcomeMessage;
+    @GetMapping("/welcome")
+    public String welcome() {
+        return welcomeMessage;
+    }
     private final UserRepository userRepository;
 
     public StudentController(UserRepository userRepository) {

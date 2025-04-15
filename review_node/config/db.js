@@ -1,39 +1,15 @@
 const { Sequelize } = require('sequelize');
+const retry = require('async-retry'); // Add this line at the top
 
 class Database {
     constructor() {
         this.sequelize = null;
         this.initialized = false;
     }
-
     async initialize() {
         if (this.initialized) return;
 
         try {
-            // First connect to default postgres database
-            const adminSequelize = new Sequelize({
-                database: 'postgres',
-                username: process.env.DB_USER,
-                password: process.env.DB_PASSWORD,
-                host: process.env.DB_HOST,
-                port: process.env.DB_PORT,
-                dialect: 'postgres',
-                logging: false
-            });
-
-            // Check if database exists
-            const [results] = await adminSequelize.query(
-                `SELECT 1 FROM pg_database WHERE datname = '${process.env.DB_NAME}'`
-            );
-
-            if (results.length === 0) {
-                await adminSequelize.query(`CREATE DATABASE "${process.env.DB_NAME}"`);
-                console.log(`Database ${process.env.DB_NAME} created`);
-            }
-
-            await adminSequelize.close();
-
-            // Connect to our application database
             this.sequelize = new Sequelize(
                 process.env.DB_NAME,
                 process.env.DB_USER,
@@ -42,7 +18,21 @@ class Database {
                     host: process.env.DB_HOST,
                     port: process.env.DB_PORT,
                     dialect: 'postgres',
-                    logging: console.log
+                    logging: console.log,
+                    retry: {
+                        max: 10, // Maximum number of retries
+                        timeout: 5000, // Timeout between retries (ms)
+                        match: [
+                            /ECONNREFUSED/,
+                            /ETIMEDOUT/,
+                            /SequelizeConnectionError/,
+                            /SequelizeConnectionRefusedError/,
+                            /SequelizeHostNotFoundError/,
+                            /SequelizeHostNotReachableError/,
+                            /SequelizeInvalidConnectionError/,
+                            /SequelizeConnectionTimedOutError/
+                        ]
+                    }
                 }
             );
 
@@ -54,7 +44,6 @@ class Database {
             throw error;
         }
     }
-
     async syncModels() {
         if (!this.initialized) {
             throw new Error('Database not initialized');
