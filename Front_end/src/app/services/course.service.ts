@@ -21,7 +21,9 @@ export class CourseService {
 
   constructor(private http: HttpClient) {}
 
-
+  getAllCourses(): Observable<Course[]> {
+    return this.http.get<Course[]>(this.apiUrl, { headers: this.getAuthHeaders() });
+  }
 // In your course.service.ts
   addCourse(course: Course, trainerId: number): Observable<Course> {
     return this.http.post<Course>(
@@ -239,7 +241,6 @@ export class CourseService {
 
     return this.http.get<Course[]>(`${this.apiUrl}/search-all`, { params });
   }
-
   searchAllMyCourses(
     searchQuery: string = '',
     category: string = ''
@@ -260,6 +261,34 @@ export class CourseService {
     if (category) params = params.set('category', category);
 
     return this.http.get<Course[]>(`${this.apiUrl}/my-courses/search-all`, {
+      params,
+      headers: this.getAuthHeaders()
+    });
+  }
+  searchMyCourses(
+    searchQuery: string = '',
+    category: string = '',
+    page: number = 0,
+    size: number = 6
+  ): Observable<Page<Course>> {
+    const user = StorageService.getUser();
+    if (!user) {
+      return throwError(() => new Error('User not authenticated'));
+    }
+
+    let userRole = StorageService.getUserRole();
+    userRole = userRole.replace(/[\[\]]/g, '').toUpperCase();
+
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('userId', user.id.toString())
+      .set('userRole', userRole);
+
+    if (searchQuery) params = params.set('searchQuery', searchQuery);
+    if (category) params = params.set('category', category);
+
+    return this.http.get<Page<Course>>(`${this.apiUrl}/my-courses/search`, {
       params,
       headers: this.getAuthHeaders()
     });

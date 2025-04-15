@@ -9,7 +9,8 @@ export const AUTH_HEADER = 'Authorization';
 
 @Injectable()
 export class AuthService {
-
+  storageService: StorageService;
+  
   constructor(private http: HttpClient, private storage: StorageService) {}
 
   // Register method
@@ -29,28 +30,28 @@ export class AuthService {
       );
   }
 
-  // Login method
-  login(signinRequest: { email: string, password: string }): Observable<any> {
-    return this.http.post<any>(
-      `${BASIC_URL}/api/v1/auth/signin`,
-      signinRequest,
-      { observe: 'response' }
-    ).pipe(
-      tap((res: HttpResponse<any>) => {
-        const token = res.headers.get('Authorization')?.replace('Bearer ', '');
-        const body = res.body;
-
-        if (token && body) {
-          this.storage.saveToken(token);
-          this.storage.saveUser({
-            id: body.userId,
-            email: signinRequest.email,
-            roles: [body.role] // Ensure this matches backend response
-          });
-        }
-      })
-    );
-  }
+ // auth.service.ts
+ login(signinRequest: { email: string, password: string }): Observable<any> {
+  return this.http.post<any>(
+    `${BASIC_URL}/api/v1/auth/signin`,
+    signinRequest,
+    { observe: 'response' }
+  ).pipe(
+    tap((res: HttpResponse<any>) => {
+      const token = res.headers.get('Authorization')?.replace('Bearer ', '');
+      const body = res.body;
+      
+      if (token && body) {
+        this.storage.saveToken(token);
+        this.storage.saveUser({
+          id: body.userId,
+          email: signinRequest.email,
+          roles: [body.role] // Ensure this matches backend response
+        });
+      }
+    })
+  );
+}
 
   log(message: string) {
     console.log(message);

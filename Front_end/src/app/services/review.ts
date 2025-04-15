@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
-import { Observable } from 'rxjs';
-import {catchError, tap} from 'rxjs/operators';
+import {Observable, of} from 'rxjs';
+import {catchError, map, tap} from 'rxjs/operators';
 import {StorageService} from '../shared/auth/storage.service';
 
 @Injectable({
@@ -27,17 +27,21 @@ export class ReviewService {
     );
   }
 
-  // Add this method
   hasStudentReviewed(studentId: number, courseId: number): Observable<boolean> {
-    return this.http.get<boolean>(`${this.apiUrl}/has-reviewed`, {
+    return this.http.get<{hasReviewed: boolean}>(`${this.apiUrl}/has-reviewed`, {
       params: {
         studentId: studentId.toString(),
         courseId: courseId.toString()
       },
       headers: this.getAuthHeaders()
-    });
+    }).pipe(
+      map(response => response.hasReviewed),
+      catchError(error => {
+        console.error('Error checking review status:', error);
+        return of(false); // Return false if there's an error
+      })
+    );
   }
-
   private getAuthHeaders(): HttpHeaders {
     const token = StorageService.getToken();
     return new HttpHeaders({

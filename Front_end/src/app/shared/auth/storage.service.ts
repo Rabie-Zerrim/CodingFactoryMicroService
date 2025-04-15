@@ -19,7 +19,7 @@ export class StorageService {
     };
     window.localStorage.setItem(USER_KEY, JSON.stringify(userData));
   }
-
+  
 
   // Save token
   public saveToken(token: string): void {
@@ -83,7 +83,7 @@ export class StorageService {
   public static getUserRole(): string {
     const user = this.getUser();
     if (!user || !user.roles) return '';
-
+    
     // Handle both string and array roles
     if (Array.isArray(user.roles)) {
       return user.roles[0]; // Return first role
@@ -105,23 +105,24 @@ export class StorageService {
 
   // Check if partner is logged in
   public static isPartnerLoggedIn(): boolean {
-    return this.getUserRole() === 'PARTNER';
+    const role = this.getUserRole();
+
+    return role === 'PARTNER' || role === '[PARTNER]';
   }
 
   // Check if trainer is logged in
-  // In storage.service.ts
-  public static isTrainerLoggedIn(): boolean {
-    const role = this.getUserRole();
-    // Handle both "[TRAINER]" and "TRAINER" cases
-    return role?.replace(/[\[\]]/g, '') === 'TRAINER';
-  }
+ // In storage.service.ts
+ public static isTrainerLoggedIn(): boolean {
+  const role = this.getUserRole();
+  // Handle both "[TRAINER]" and "TRAINER" cases
+  return role?.replace(/[\[\]]/g, '') === 'TRAINER';
+}
 
   // Logout user
   public static logout(): void {
     window.localStorage.removeItem(TOKEN_KEY);
     window.localStorage.removeItem(USER_KEY);
   }
-
 
   // Non-static logout
   public logout(): void {

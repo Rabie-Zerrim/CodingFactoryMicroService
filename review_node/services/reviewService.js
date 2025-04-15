@@ -5,22 +5,34 @@ const courseServiceClient = require('./courseServiceClient');
 class ReviewService {
     async addReview(reviewData) {
         const { Review, Recommendation } = getModels();
+        const { studentId, courseId } = reviewData;
 
         try {
-            console.log('Creating review with data:', reviewData);
+            console.log('Checking for existing review...');
 
-            // Create the review first
+            // Check if the student already reviewed this course
+            const existingReview = await Review.findOne({
+                where: {
+                    studentId,
+                    courseId
+                }
+            });
+
+            if (existingReview) {
+                console.log(`Student ${studentId} already reviewed course ${courseId}. Skipping creation.`);
+                // Instead of throwing error, return a message or a custom object
+                return { message: 'Review already submitted by this student for this course.' };
+            }
+
+            console.log('Creating new review:', reviewData);
             const review = await Review.create(reviewData);
 
-            // Try to update course rate (but don't fail if it doesn't work)
             try {
                 await this.updateCourseRate(review.courseId);
             } catch (error) {
                 console.error('Non-critical error updating course rate:', error.message);
-                // Continue anyway since the review was created successfully
             }
 
-            // Handle recommendations if comment exists
             if (reviewData.comment && reviewData.comment.trim() !== '') {
                 const { suggestion } = await geminiAIService.analyzeSentiment(reviewData.comment);
                 if (suggestion) {
@@ -36,6 +48,11 @@ class ReviewService {
             console.error('Error in addReview:', error);
             throw error;
         }
+    }
+    async hasStudentReviewedCourse(studentId, courseId) {
+        const { Review } = getModels();
+        const existingReview = await Review.findOne({ where: { studentId, courseId } });
+        return !!existingReview;
     }
 
     async updateCourseRate(courseId) {

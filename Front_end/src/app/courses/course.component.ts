@@ -144,6 +144,10 @@ export class CourseComponent implements OnInit {
     if (this.isStudentLoggedIn) {
       const studentId = StorageService.getUserId();
       if (studentId) {
+        // Reset all review statuses first
+        this.allCourses.forEach(course => course.hasReviewed = false);
+
+        // Then check each course
         this.allCourses.forEach(course => {
           this.reviewService.hasStudentReviewed(studentId, course.id)
             .subscribe({
@@ -161,7 +165,6 @@ export class CourseComponent implements OnInit {
       }
     }
   }
-
   onSearchChange(): void {
     this.currentPage = 0;
     this.searchCourses();
@@ -205,6 +208,32 @@ export class CourseComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  openQRModal(course: Course): void {
+    this.selectedCourse = course;
+    if (course.qrCodeUrl) {
+      // If QR code URL exists, use it directly
+      this.qrCodeImageUrl = course.qrCodeUrl;
+      this.showQRModal = true;
+    } else {
+      // If no QR code exists, generate one
+      this.courseService.getCourseQRCodeBase64(course.id).subscribe(
+        (response) => {
+          this.qrCodeImageUrl = response.qrCodeBase64;
+          this.showQRModal = true;
+          this.cdr.detectChanges();
+        },
+        (error) => {
+          console.error('Error generating QR code:', error);
+          Swal.fire('Error', 'Failed to generate QR code', 'error');
+        }
+      );
+    }
+  }
+
+  closeQRModal(): void {
+    this.showQRModal = false;
+    this.qrCodeImageUrl = null;
+  }
   private handleCoursesResponse(page: Page<Course>): void {
     const processedCourses = page.content.map(course => ({
       ...course,
@@ -379,7 +408,7 @@ export class CourseComponent implements OnInit {
           next: (students) => {
             // @ts-ignore
             this.enrolledStudents = students;
-            this.showStudentsModal = true;
+            this.showStudentsModal = false;
             this.cdr.detectChanges();
           },
           error: (error) => {

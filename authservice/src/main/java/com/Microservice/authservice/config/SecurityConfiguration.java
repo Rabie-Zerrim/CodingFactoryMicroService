@@ -19,6 +19,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -35,10 +38,14 @@ public class SecurityConfiguration {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/v1/auth/signin",
-                                "/api/v1/auth/signup",
-                                "/api/v1/auth/refresh-token",
-                                    "/courses/**"
+                                "/api/v1/auth/**",
+                                "/api/v1/auth/forgot-password",
+                                "/api/v1/auth/reset-password",
+                                "/courses/**",
+                                "/api/v1/courses/**",
+                                "/course-resources/retrieve-all-resources",
+                                "/course-resources/course/**"
+
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -47,18 +54,8 @@ public class SecurityConfiguration {
 
         return http.build();
     }
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("http://localhost:4200"); // Adjust this to match your frontend URL
-        config.addAllowedHeader("*"); // Allow all headers
-        config.addAllowedMethod("*"); // Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
-        config.setAllowCredentials(true); // Allow credentials like cookies or authorization headers
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+    // Remove the corsConfigurationSource() bean entirely
 
     @Bean
     public PasswordEncoder passwordEncoder() {
