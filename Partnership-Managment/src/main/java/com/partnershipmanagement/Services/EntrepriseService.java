@@ -2,14 +2,15 @@ package com.partnershipmanagement.Services;
 
 import com.partnershipmanagement.Entities.Entreprise;
 import com.partnershipmanagement.Entities.Role;
-import com.partnershipmanagement.Entities.User;
 import com.partnershipmanagement.Repositories.EntrepriseRepository;
 import com.partnershipmanagement.Repositories.UserRepository;
+import com.partnershipmanagement.dto.UserClient;
+import com.partnershipmanagement.dto.UserDto;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class EntrepriseService implements IEntrepriseService{
@@ -17,6 +18,9 @@ public class EntrepriseService implements IEntrepriseService{
     EntrepriseRepository entrepriseRepository;
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    UserClient userClient;
+
 
     @Override
     public Entreprise createEntreprise(Entreprise ent) {
@@ -44,13 +48,30 @@ public class EntrepriseService implements IEntrepriseService{
         return entrepriseRepository.save(existingEntreprise);
     }
 
-   @Override
+      /* @Override
+        public Entreprise addEntrepriseAndAffectToUser(Entreprise ent, int idUser) {
+           User user = userRepository.findById(idUser).get();
+           Entreprise e = entrepriseRepository.save(ent);
+           ent.setPartner(user);
+           System.out.println(e.getDescriptionEntreprise());
+            return e;
+        }*/
+
+    @Override
     public Entreprise addEntrepriseAndAffectToUser(Entreprise ent, int idUser) {
-       User user = userRepository.findById(idUser).get();
-       Entreprise e = entrepriseRepository.save(ent);
-       ent.setPartner(user);
-       System.out.println(e.getDescriptionEntreprise());
-        return e;
+        UserDto user = userClient.getUserById(idUser); // Feign Client
+
+        if (user == null) {
+            throw new RuntimeException("User not found with id: " + idUser);
+        }
+
+        ent.setPartnerId(user.getId()); // <-- IMPORTANT: Set before save
+        Entreprise savedEntreprise = entrepriseRepository.save(ent);
+
+        // For enriching response
+        savedEntreprise.setPartnerDto(user);
+        return savedEntreprise;
+
     }
 
     @Override
@@ -58,7 +79,34 @@ public class EntrepriseService implements IEntrepriseService{
         return entrepriseRepository.findAll();
     }
 
-    public String assignEntrepriseToUser(String nameEnt, String cin) {
+    public String assignEntrepriseToUser(int idEntreprise, int idUser) {
+        // 1. Fetch the user from the auth microservice using Feign
+        UserDto userDto = userClient.getUserById(idUser);
+        if (userDto == null) {
+            return "User not found with ID: " + idUser;
+        }
+
+        // 2. Fetch the existing entreprise by ID
+        Entreprise entreprise = entrepriseRepository.findById(idEntreprise)
+                .orElse(null);
+
+        if (entreprise == null) {
+            return "Entreprise not found with ID: " + idEntreprise;
+        }
+
+        // 3. Set up the User entity reference with only the ID
+        UserDto user = new UserDto();
+        user.setId(userDto.getId());
+
+        // 4. Assign and save
+        entreprise.setPartnerDto(user);
+        entreprise  .setPartnerId(user.getId());
+        entrepriseRepository.save(entreprise);
+
+        return "Entreprise with ID " + idEntreprise + " successfully assigned to user with ID " + idUser;
+    }
+
+  /*  public String assignEntrepriseToUser(String nameEnt, String cin) {
         Entreprise ent = entrepriseRepository.findByName(nameEnt);
         if (ent == null) {
             return "Entreprise does not exist";
@@ -76,11 +124,11 @@ public class EntrepriseService implements IEntrepriseService{
         }
 
         // Assign the entreprise to the user
-        ent.setPartner(user);
-        entrepriseRepository.save(ent);
+        //ent.setPartner(user);
+      //  entrepriseRepository.save(ent);
 
         return "Entreprise successfully assigned to user";
-    }
+    }*/
 
-    }
+}
 

@@ -1,10 +1,11 @@
-C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\configurations\CorsConfig.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\configurations\AppConfig.java
+C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Services\CenterService.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\configurations\SecurityConfiguration.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Entities\ProposalScheduledTasks.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Services\EmailService.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Controllers\ScrapingController.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Entities\AcceptanceStatus.java
+C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Services\ICenterService.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Services\ScrapingService.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\dto\MeetingRequest.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Controllers\ZoomController.java
@@ -18,6 +19,8 @@ C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Repositories\PartnershipRepository.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Repositories\ProposalRepository.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Services\IPartnershipService.java
+C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Controllers\CenterController.java
+C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Entities\Center.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Entities\Status.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Repositories\UserRepository.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Services\ZoomOAuthService.java
@@ -36,7 +39,10 @@ C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Entities\Role.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Services\IEntrepriseService.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Services\PartnershipService.java
+C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\dto\UserClient.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Services\IProposalService.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Services\ZoomMeetingService.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Controllers\EntrepriseController.java
+C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\dto\UserDto.java
 C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Repositories\EntrepriseRepository.java
+C:\Users\Rabie\Downloads\MiniProjet 1\MiniProjet\Partnership-Managment\src\main\java\com\partnershipmanagement\Repositories\CenterRepository.java

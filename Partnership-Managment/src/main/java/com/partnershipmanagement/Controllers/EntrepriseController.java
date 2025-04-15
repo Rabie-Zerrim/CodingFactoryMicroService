@@ -14,6 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("entreprises")
 @RestController
+
 public class EntrepriseController {
     @Autowired
     private EntrepriseService serviceEntreprise;
@@ -45,9 +46,14 @@ public class EntrepriseController {
 
     // Add entreprise and assign to a user
     @PostMapping("/AddEntrepriseandAssignToUser/{idUser}")
-    public Entreprise addEntrepriseAndAffectToUser(@RequestBody Entreprise ent, @RequestParam int idUser) {
+    public Entreprise addEntrepriseAndAffectToUser(@RequestBody Entreprise ent, @PathVariable int idUser) {
         return serviceEntreprise.addEntrepriseAndAffectToUser(ent, idUser);
     }
+    @PutMapping("/assignEntreprise/{idEntreprise}/toUser/{idUser}")
+    public String assignEntrepriseToUser(@PathVariable int idEntreprise, @PathVariable int idUser) {
+        return serviceEntreprise.assignEntrepriseToUser(idEntreprise, idUser);
+    }
+
 
     @PutMapping("/update/{id}")
     public ResponseEntity<Entreprise> updateEntreprise(@PathVariable int id, @RequestBody Entreprise ent) {
@@ -59,9 +65,9 @@ public class EntrepriseController {
         }
     }
 
-    @PutMapping("/assignEntrepriseToUser/{entrepriseName}/{cin}")
+   /* @PutMapping("/assignEntrepriseToUser/{entrepriseName}/{cin}")
     public String assignEntrepriseToUser(@RequestParam String entrepriseName, @RequestParam String cin) {
         return serviceEntreprise.assignEntrepriseToUser(entrepriseName, cin);
-    }
+    }*/
 
 }
