@@ -30,9 +30,15 @@ public class EventRestController {
         return welcomeMessage;
     }
     @PostMapping("/generate-description")
-    public ResponseEntity<Map<String, String>> generateEventDescription(@RequestBody Event event) throws IOException {
-        // Use the OpenAI service to generate a description based on the event details
-        return geminiAIService.generateEventDescription(event);
+    public ResponseEntity<?> generateEventDescription(@RequestBody Event event) {
+        try {
+            return geminiAIService.generateEventDescription(event);
+        } catch (IOException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to generate description");
+            errorResponse.put("details", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
     // Add Event (Only Admins or Trainers can add)
     @PostMapping("/add/{userId}")

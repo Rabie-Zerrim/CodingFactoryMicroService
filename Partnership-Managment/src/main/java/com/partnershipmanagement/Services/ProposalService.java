@@ -47,6 +47,7 @@ public class ProposalService {
         proposal.setPlannedAmount(proposalDetails.getPlannedAmount());
         proposal.setProposalStatus(proposalDetails.getProposalStatus());
         proposal.setProposalType(proposalDetails.getProposalType());
+        proposal.setUser(proposalDetails.getUser());
 
         return proposalRepository.save(proposal);
     }

@@ -436,7 +436,6 @@ public class EventServiceImpl implements IEventService{
                 .append("UID:").append(uid).append("\n")
                 .append("SUMMARY:").append(event.getEventName()).append("\n")
                 .append("DESCRIPTION:").append(event.getEventDescription()).append("\n")
-                .append("LOCATION:").append(getEventLocation(event)).append("\n")
                 .append("DTSTART:").append(dtStart).append("\n")
                 .append("DTEND:").append(dtEnd).append("\n")
                 .append("DTSTAMP:").append(formatter.format(Instant.now())).append("\n")

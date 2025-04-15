@@ -48,7 +48,8 @@ public class Proposal {
   //  @NotEmpty(message = "Proposal type cannot be empty")
     String proposalType;
 
-
+    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    User user;
 
     // One-to-many relationship: One Proposal can have many Applications
     @OneToMany(mappedBy = "proposals", cascade = CascadeType.ALL)

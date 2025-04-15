@@ -4,17 +4,23 @@ import com.partnershipmanagement.Entities.AcceptanceStatus;
 import com.partnershipmanagement.Entities.Assessment;
 import com.partnershipmanagement.Services.AssessmentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/assessments")
 public class AssessmentController {
 
+    @Value("${welcome.message}")
+    private String welcomeMessage;
+    @GetMapping("/utils/welcome")
+    public String welcome() {
+        return welcomeMessage;
+    }
     @Autowired
     private AssessmentService assessmentService;
 

@@ -37,22 +37,19 @@ public class GeminiAiService {
         return location;
     }
     public ResponseEntity<Map<String, String>> generateEventDescription(Event event) throws IOException {
-        // Construct the prompt using the Event object
+        // Construct the prompt without failing if center info is missing
         String prompt = String.format(
                 "Generate a detailed event description based on the following details:\n" +
                         "Event Name: %s\n" +
                         "Event Date: %s\n" +
                         "Event Category: %s\n" +
-                        "Event Center: %s\n" +
-                        "Event Description: %s\n"+
+                        "Event Description: %s\n" +
                         "that does not exceed 255 characters",
                 event.getEventName(),
                 event.getEventDate(),
                 event.getEventCategory(),
-                event.getCentre(), // Just show the center name
                 event.getEventDescription()
         );
-
         // Create the HTTP client
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpPost httpPost = new HttpPost(GEMINI_API_URL + "?key=" + API_KEY);
@@ -89,7 +86,6 @@ public class GeminiAiService {
                         generatedText = generatedText.replaceAll("\\*+", ""); // Remove bold markers
                         generatedText = generatedText.replaceAll("^(#)+\\s*", ""); // Remove headings # symbols
                         // Step 1: Extract only the center name for the "Location" field
-                        generatedText = generatedText.replaceAll("Location: .+?\\(.*\\)", "Location: "+getEventLocation(event)); // Keep only the center name
 
 // Step 2: Remove any "About the Venue" section from the generated text
                         generatedText = generatedText.replaceAll("About the Venue:.*", "");

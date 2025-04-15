@@ -3,6 +3,7 @@ package com.partnershipmanagement.Controllers;
 import com.partnershipmanagement.Entities.Center;
 import com.partnershipmanagement.Services.ICenterService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/centers")
 public class CenterController {
+
 
     @Autowired
     private ICenterService centerService;
