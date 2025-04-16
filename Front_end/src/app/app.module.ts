@@ -1,8 +1,9 @@
 import { NgModule } from "@angular/core";
+import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { RouterModule } from '@angular/router';
 import { AngularFireModule } from "@angular/fire";
 import { AngularFireAuthModule } from "@angular/fire/auth";
-import { CourseComponent } from './courses/course.component';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { NgbModule } from "@ng-bootstrap/ng-bootstrap";
 import { ToastrModule } from "ngx-toastr";
@@ -21,26 +22,28 @@ import {
   PerfectScrollbarConfigInterface
 } from 'ngx-perfect-scrollbar';
 import { ModalModule } from '@coreui/angular';
-import { AppRoutingModule } from "./app-routing.module";
-import { SharedModule } from "./shared/shared.module";
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+
+import { SharedModule } from './shared/shared.module';
+import { AppComponent } from './app.component';
+import { ContentLayoutComponent } from './layouts/content/content-layout.component';
+import { FullLayoutComponent } from './layouts/full/full-layout.component'; // Add this import
+import { AppRoutingModule } from './app-routing.module';
 import * as fromApp from './store/app.reducer';
-import { AppComponent } from "./app.component";
-import { ContentLayoutComponent } from "./layouts/content/content-layout.component";
-import { FullLayoutComponent } from "./layouts/full/full-layout.component";
-import { CommonModule } from '@angular/common'; // Import CommonModule
 import { AuthService } from "./shared/auth/auth.service";
 import { AuthGuard } from "./shared/auth/auth-guard.service";
 import { WINDOW_PROVIDERS } from './shared/services/window.service';
 
-var firebaseConfig = {
-  apiKey: "AIzaSyC9XfnIpwNoSv7cyAsoccFQ5EYPd7lZXrk", //YOUR_API_KEY
-  authDomain: "apex-angular.firebaseapp.com", //YOUR_AUTH_DOMAIN
-  databaseURL: "https://apex-angular.firebaseio.com", //YOUR_DATABASE_URL
-  projectId: "apex-angular", //YOUR_PROJECT_ID
-  storageBucket: "apex-angular.appspot.com", //YOUR_STORAGE_BUCKET
-  messagingSenderId: "447277845463", //YOUR_MESSAGING_SENDER_ID
-  appId: "1:447277845463:web:9a7db7aaeaf3a7217a9992", //YOUR_APP_ID
-  measurementId: "G-ZVSYZRJ211" //YOUR_MEASUREMENT_ID
+const firebaseConfig = {
+  apiKey: "AIzaSyC9XfnIpwNoSv7cyAsoccFQ5EYPd7lZXrk",
+  authDomain: "apex-angular.firebaseapp.com",
+  databaseURL: "https://apex-angular.firebaseio.com",
+  projectId: "apex-angular",
+  storageBucket: "apex-angular.appspot.com",
+  messagingSenderId: "447277845463",
+  appId: "1:447277845463:web:9a7db7aaeaf3a7217a9992",
+  measurementId: "G-ZVSYZRJ211"
 };
 
 const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
@@ -55,22 +58,26 @@ export function createTranslateLoader(http: HttpClient) {
 @NgModule({
   declarations: [
     AppComponent,
-    FullLayoutComponent,
     ContentLayoutComponent,
+    FullLayoutComponent // Add this declaration
   ],
   imports: [
+    BrowserModule,
     BrowserAnimationsModule,
     StoreModule.forRoot(fromApp.appReducer),
     AppRoutingModule,
     CommonModule,
-    SharedModule,
+    SharedModule, // This should export all shared components
     HttpClientModule,
+    FormsModule,
+    ReactiveFormsModule,
     AngularFireModule.initializeApp(firebaseConfig),
     AngularFireAuthModule,
     ToastrModule.forRoot(),
     NgbModule,
     NgSelectModule,
     NgxSpinnerModule,
+    RouterModule,
     TranslateModule.forRoot({
       loader: {
         provide: TranslateLoader,
@@ -96,7 +103,6 @@ export function createTranslateLoader(http: HttpClient) {
       provide: PERFECT_SCROLLBAR_CONFIG,
       useValue: DEFAULT_PERFECT_SCROLLBAR_CONFIG
     },
-    { provide: PERFECT_SCROLLBAR_CONFIG, useValue: DEFAULT_PERFECT_SCROLLBAR_CONFIG },
     WINDOW_PROVIDERS
   ],
   bootstrap: [AppComponent]

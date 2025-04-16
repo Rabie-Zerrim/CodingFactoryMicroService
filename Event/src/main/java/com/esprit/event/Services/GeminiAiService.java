@@ -25,17 +25,7 @@ public class GeminiAiService {
     private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
     private static final String API_KEY = "AIzaSyANt-b9SxtIhencQ4IV7OHtoGGjFBtD0NQ";
 
-    @Autowired
-    private CenterClient centerClient;
-    public String getEventLocation(Event event) {
-        // Fetch the Center by ID using OpenFeign
-        CenterDTO center = centerClient.getCenterById(event.getCentre());
 
-        // Access the centre name
-        String location = "LOCATION: " + (center != null ? center.getNameCenter() : "Unknown");
-
-        return location;
-    }
     public ResponseEntity<Map<String, String>> generateEventDescription(Event event) throws IOException {
         // Construct the prompt without failing if center info is missing
         String prompt = String.format(

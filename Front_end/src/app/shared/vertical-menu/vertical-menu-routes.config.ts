@@ -9,6 +9,14 @@ export const ROUTES: RouteInfo[] = [
       { path: '/dashboard/dashboard2', title: 'Dashboard 2', icon: 'ft-arrow-right submenu-icon', class: '', badge: '', badgeClass: '', isExternalLink: false, submenu: [] },
     ]
   },
+  { path: '/proposal', title: 'Proposals', icon: 'ft-file-text', class: '', badge: '', badgeClass: '', isExternalLink: false, submenu: [] },
+  {
+    path: '/partnerships', title: 'Partnerships', icon: 'ft-layout', class: '', badge: '', badgeClass: '', isExternalLink: false, submenu: []
+  },
+  { path: '/entreprise', title: 'Entreprises', icon: 'ft-briefcase', class: '', badge: '', badgeClass: '', isExternalLink: false, submenu: [] },
+  { path: '/center', title: 'Centers', icon: 'ft-map-pin', class: '', badge: '', badgeClass: '', isExternalLink: false, submenu: [] },
+  { path: '/scraping', title: 'Scraping', icon: 'ft-search', class: '', badge: '', badgeClass: '', isExternalLink: false, submenu: [] },
+  { path: '/potentialpartners', title: 'Potential', icon: 'ft-search', class: '', badge: '', badgeClass: '', isExternalLink: false, submenu: [] },
   { path: '/courses', title: 'Courses', icon: 'ft-book', class: '', badge: '', badgeClass: '', isExternalLink: false, submenu: [] },
 
   { path: '/events', title: 'Events', icon: 'ft-calendar', class: '', badge: '', badgeClass: '', isExternalLink: false, submenu: [] },

@@ -10,7 +10,7 @@ import { Observable } from 'rxjs';
 })
 export class EventService {
   private apiUrl="http://localhost:8090/event";
-  
+
 
   constructor(private http: HttpClient) {}
   getAllEvents(page: number = 0, size: number = 6): Observable<any> {
@@ -34,7 +34,7 @@ export class EventService {
   {
     return this.http.delete<void>(this.apiUrl+"/delete/"+id);
   }
-  
+
   updateEvent(id:number,event:Event):Observable<Event>
   {
     return this.http.put<Event>(this.apiUrl+"/update/"+id,event);
@@ -90,7 +90,7 @@ getFilteredEvents(filters: any): Observable<any[]> {
   if (filters.createdBy) {
     params = params.set('createdBy', filters.createdBy);
   }
-  
+
   return this.http.get<any[]>(this.apiUrl+"/filtredEvents", { params });
 }
 downloadIcs(eventId: number): Observable<Blob> {

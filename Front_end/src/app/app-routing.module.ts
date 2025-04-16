@@ -8,6 +8,7 @@ import { Full_ROUTES } from "./shared/routes/full-layout.routes";
 import { CONTENT_ROUTES } from "./shared/routes/content-layout.routes";
 
 import { AuthGuard } from './shared/auth/auth-guard.service';
+import {EntrepriseAddComponent} from './entreprise/entreprise/entreprise-add/entreprise-add.component';
 
 const appRoutes: Routes = [
   {
@@ -17,6 +18,25 @@ const appRoutes: Routes = [
   },
   { path: '', component: FullLayoutComponent, data: { title: 'full Views' }, children: Full_ROUTES, canActivate: [AuthGuard] },
   { path: '', component: ContentLayoutComponent, data: { title: 'content Views' }, children: CONTENT_ROUTES },
+  { path: 'entreprise/add', component: EntrepriseAddComponent },
+  {
+    path: 'entreprise',
+    loadChildren: () => import('./entreprise/entreprise/entreprise.module').then(m => m.EntrepriseModule),
+  },
+  {
+    path: 'partnership',
+    loadChildren: () => import('./partnership/partnership.module').then(m => m.PartnershipModule),
+  },
+  {
+    path: 'proposal',
+    loadChildren: () => import('./proposal/proposal.module').then(m => m.ProposalModule),
+  },
+
+  {
+    path: 'partnerships',
+    loadChildren: () => import('./data-tables/data-tables.module').then(m => m.DataTablesModule),
+  },
+
   {
     path: '**',
     redirectTo: 'pages/error'
