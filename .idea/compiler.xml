@@ -13,6 +13,7 @@
         <module name="reviews" />
         <module name="EEureka" />
         <module name="ApiGetway" />
+        <module name="certification" />
       </profile>
       <profile name="Annotation profile for esponline" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -52,6 +53,7 @@
       <module name="Gestion-PFE" options="-parameters" />
       <module name="PartnershipManagement" options="-parameters" />
       <module name="authservice" options="-parameters -parameters" />
+      <module name="certification" options="-parameters" />
       <module name="config-server" options="-parameters" />
       <module name="esponline" options="-parameters" />
       <module name="reviews" options="-parameters" />

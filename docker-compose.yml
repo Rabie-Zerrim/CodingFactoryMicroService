@@ -167,6 +167,85 @@ services:
       timeout: 10s
       retries: 10
 
+  exam-microservice:
+    build:
+      context: ./exam-master # Update this path if needed
+    container_name: exam-microservice
+    hostname: exam-microservice
+    ports:
+      - "8880:8880"
+    environment:
+      SPRING_APPLICATION_NAME: exam-microservice
+      SERVER_PORT: 8880
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/e-learning?createDatabaseIfNotExist=true&useSSL=false
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: rootpassword
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: exam-microservice
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: nizaraoun1919@gmail.com
+      SPRING_MAIL_PASSWORD: pkdp eoyw ssdz jbmh
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "true"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "true"
+    volumes:
+      - ./exam-master/certificates:/app/certificates # Adjust path as needed
+      - ./exam-master/templates:/app/templates # Adjust path as needed
+      - ./exam-master/uploads:/app/uploads # Adjust path as needed
+    networks:
+      - microservice-net
+    depends_on:
+      - mysql
+      - eureka-server
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8880/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+  gestion-pfe:
+    build:
+      context: ./Gestion-PFE  # Assuming your application is in this directory
+    container_name: gestion-pfe
+    hostname: gestion-pfe
+    ports:
+      - "8089:8089"  # Choose a port that's not already used
+    environment:
+      SPRING_APPLICATION_NAME: Gestion-PFE
+      SERVER_PORT: 8089
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/Gestion-PFE?createDatabaseIfNotExist=true&userSSL=false&max_allowed_packet=15728640
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: rootpassword
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "true"
+      EUREKA_CLIENT_FETCH_REGISTRY: "true"
+      EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
+      EUREKA_INSTANCE_HOSTNAME: gestion-pfe
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRINGDOC_API_DOCS_ENABLED: "true"
+      SPRINGDOC_SWAGGER_UI_ENABLED: "true"
+    networks:
+      - microservice-net
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8089/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
   gestion-courses:
     build:
       context: ./Gestion-Courses

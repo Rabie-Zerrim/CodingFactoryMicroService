@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Coding_Factory_Backend.iml" filepath="$PROJECT_DIR$/.idea/Coding_Factory_Backend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Partnership-Managment/PartnershipManagement.iml" filepath="$PROJECT_DIR$/Partnership-Managment/PartnershipManagement.iml" />
     </modules>
   </component>
 </project>

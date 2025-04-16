@@ -13,6 +13,7 @@
         <option value="$PROJECT_DIR$/authservice/pom.xml" />
         <option value="$PROJECT_DIR$/Partnership-Managment/pom.xml" />
         <option value="$PROJECT_DIR$/config-server/pom.xml" />
+        <option value="$PROJECT_DIR$/exam-master/pom.xml" />
       </list>
     </option>
   </component>
